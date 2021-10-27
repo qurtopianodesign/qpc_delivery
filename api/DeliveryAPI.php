@@ -2,7 +2,8 @@
 
 
 class DeliveryAPI {
-	const API_BASEURL = "https://qpc.qpcdev.it/api/";
+	const API_BASEURL = "https://demo.qpcdev.it/api/";
+
 	private $deliverySession;
 
 
@@ -23,7 +24,6 @@ class DeliveryAPI {
 				"cache-control: no-cache"
 			),
 		) );
-
 		return $this->executeGETcurl( $curl );
 	}
 
@@ -287,7 +287,7 @@ class DeliveryAPI {
 
 	}
 
-	public function addToCart( $deliverySession, $price, $productId, $attributeValue, $attributePrice, $attributeTheId ,$attributeId, $qty = 1 ) {
+	public function addToCart( $deliverySession, $price, $productId, $attributeValue, $attributePrice, $attributeTheId ,$attributeId, $lang, $qty = 1 ) {
 		$curl      = curl_init();
 		$price     += $attributePrice;
 		$attribute = '';
@@ -312,7 +312,7 @@ class DeliveryAPI {
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
 			CURLOPT_CUSTOMREQUEST  => "POST",
-			CURLOPT_POSTFIELDS     => "price=$price&productId=$productId&qty=$qty" . $attribute,
+			CURLOPT_POSTFIELDS     => "price=$price&productId=$productId&lang=$lang&qty=$qty" . $attribute,
 			CURLOPT_HTTPHEADER     => array(
 				"Content-Type: application/x-www-form-urlencoded",
 				"Cookie: delivery_session=$deliverySession"
@@ -334,26 +334,10 @@ class DeliveryAPI {
 	}
 
 	public function removeFromCart( $deliverySession, $productId ) {
-		/**
-		 *
-		 * CURLOPT_URL            => self::API_BASEURL . 'product/add/cart',
-		 * CURLOPT_RETURNTRANSFER => true,
-		 * CURLOPT_ENCODING       => "",
-		 * CURLOPT_MAXREDIRS      => 10,
-		 * CURLOPT_TIMEOUT        => 0,
-		 * CURLOPT_HEADER         => 1,
-		 * CURLOPT_FOLLOWLOCATION => true,
-		 * CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-		 * CURLOPT_CUSTOMREQUEST  => "POST",
-		 * CURLOPT_POSTFIELDS     => "price=$price&productId=$productId&qty=$qty".$attribute,
-		 * CURLOPT_HTTPHEADER     => array(
-		 * "Content-Type: application/x-www-form-urlencoded",
-		 * "Cookie: delivery_session=$deliverySession"
-		 * ),
-		 */
+
 		$curl = curl_init();
 		$data = array(
-      CURLOPT_URL            => self::API_BASEURL . 'cart/item/'.$productId.'/remove',
+      		CURLOPT_URL            => self::API_BASEURL . 'cart/item/'.$productId.'/remove',
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -374,27 +358,8 @@ class DeliveryAPI {
 		$err      = curl_error( $curl );
 		if ( $err ) {
 			return "cURL Error #:" . $err;
-		} else {
-			$return['response']                       = $response;
-			$return['data']['CURLOPT_URL']            = "https://osteriadelviandante.finedelivery.it/api/cart/item/$productId/remove";
-			$return['data']['CURLOPT_RETURNTRANSFER'] = "true";
-			$return['data']['CURLOPT_ENCODING']       = '';
-			$return['data']['CURLOPT_MAXREDIRS']      = "10";
-			$return['data']['CURLOPT_TIMEOUT']        = "0";
-			$return['data']['CURLOPT_HEADER']         = "1";
-			$return['data']['CURLOPT_SSL_VERIFYPEER'] = "0";
-			$return['data']['CURLOPT_FOLLOWLOCATION'] = "true";
-			$return['data']['CURLOPT_HTTP_VERSION']   = "CURL_HTTP_VERSION_1_1";
-			$return['data']['CURLOPT_CUSTOMREQUEST']  = "POST";
-			$return['data']['CURLOPT_HTTPHEADER']     = "array(
-				'Content-Type: application/x-www-form-urlencoded',
-				'Cookie: delivery_session=$deliverySession')";
-
-			//	$this->deliverySession = $deliverySession;
-			return json_encode( $return );
-			//	return  $data;
-		}
-		//return $this->executeCURL( $curl );
+		} 
+			return json_decode( $response, true );
 	}
 
 

@@ -74,7 +74,7 @@ require( 'template-parts/header/no-header.php' );
                         <ul>
 							<?php foreach ( $products as $product ): ?>
                                 <li>
-                                    <span><?= $product["name"]; ?></span>
+                                    <span><?= $QPC_Delivery->getProductName($product); //$product["name"]; ?></span>
                                     <span class="qpc-price"><?= str_replace(",00", "", number_format($product["price"], 2, ",", "")); ?> €</span>
                                     <!-- <p class="no-barba delivery-add-to-cart" delivery-price="<?=$product['price']; ?>" delivery-productId="<?=$product['id']; ?>" delivery-qty="1" ><?php esc_html_e( 'Prenota', 'mos-theme' ); ?> <span
                                                 class="icon-qpc-prenota"></span></p> -->

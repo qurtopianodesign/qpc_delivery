@@ -19,7 +19,7 @@ var $ = jQuery;
                         var obj = JSON.parse(res);
                         if (obj.error) {
                       //    console.log($(this).val()+' '+ $(this).attr("delivery-qty")+' '+qty);
-    $("#delivery-login-error").html(obj.error);
+                            $("#delivery-login-error").html(obj.error);
                         } else {
                             //      console.dir(obj);
                             $("#voucher-first_name").val(obj.first_name);
@@ -299,7 +299,7 @@ var $ = jQuery;
                 action: "remove_from_cart"
             }, function (res) {
                 console.log(Cookies.get("delivery-session"));
-                console.dir(JSON.parse(res));
+                console.dir(res);
               /*  Cookies.set("delivery-session", res, {
                     expires: 36000 // il numero di giorni in cui il cookie sarà efficace
                 });*/
@@ -473,7 +473,7 @@ function getCart() {
                     "</div>";
                 $("#delivery-cart").append(html);
 
-                subtotal += parseInt(rowTotal);
+                subtotal += (rowTotal);
             }
         });
 

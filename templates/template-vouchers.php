@@ -71,6 +71,7 @@ global $wp_query;
 									delivery-productId="<?= $product['id']; ?>"
 									delivery-price="<?= $product['price']; ?>"
 									delivery-attributeId="<?= $attribute["id"]; ?>"
+									delivery-attributeTheId="<?= $attribute["attribute_id"]; ?>"
 									delivery-attributePrice="<?= $attribute["price"]; ?>"
 									delivery-attributeValue="<?= $title; ?>"
 									delivery-qty="1"><?php esc_html_e( "Aggiungi al carrello", 'mos-theme' ); ?>

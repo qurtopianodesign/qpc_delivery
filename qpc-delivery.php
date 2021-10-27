@@ -8,17 +8,19 @@ Author: Quartopianocomunicazione
 Author URI: https://quartopianocomunicazione.it
 */
 
-include( "api/DeliveryAPI.php" );
-include( "api/MailchimpAPI.php" );
+include("api/DeliveryAPI.php");
+include("api/MailchimpAPI.php");
 
 /**
  * Currently plugin version.
  */
-define( 'QPC_DELIVERY_VERSION', '1.0.0' );
-define( 'QPC_DELIVERY_BASEURL', 'https://qpc.qpcdev.it/storage/app/public/' );
-define( 'QPC_DELIVERY_URL', 'https://qpc.qpcdev.it/' );
+define('QPC_DELIVERY_VERSION', '1.0.0');
 
-class Qpc_Delivery {
+define('QPC_DELIVERY_BASEURL', 'https://demo.qpcdev.it/storage/app/public/');
+define('QPC_DELIVERY_URL', 'https://demo.qpcdev.it/');
+
+class Qpc_Delivery
+{
 	/**
 	 * The ID of this plugin.
 	 *
@@ -53,9 +55,10 @@ class Qpc_Delivery {
 
 	public $cart;
 
-	public function __construct() {
+	public function __construct()
+	{
 
-		if ( defined( 'QPC_DELIVERY_VERSION' ) ) {
+		if (defined('QPC_DELIVERY_VERSION')) {
 			$this->version = QPC_DELIVERY_VERSION;
 		} else {
 			$this->version = '1.0.0';
@@ -64,43 +67,48 @@ class Qpc_Delivery {
 		$this->_delivery   = new DeliveryAPI();
 		$this->_mailchimp = new MailchimpAPI();
 
-		add_action( 'init', array( $this, 'product_api_rewrite_tag' ) );
-		add_action( 'init', array( $this, 'product_api_rewrite_rule' ) );
-		add_action( 'init', array( $this, 'category_api_rewrite_tag' ) );
-		add_action( 'init', array( $this, 'category_api_rewrite_rule' ) );
+		add_action('init', array($this, 'product_api_rewrite_tag'));
+		add_action('init', array($this, 'product_api_rewrite_rule'));
+		add_action('init', array($this, 'category_api_rewrite_tag'));
+		add_action('init', array($this, 'category_api_rewrite_rule'));
 
-		add_action( 'wp_ajax_is_logged', array( $this, 'is_logged' ) );
-		add_action( 'wp_ajax_nopriv_is_logged', array( $this, 'is_logged' ) );
-		add_action( 'wp_ajax_login', array( $this, 'login' ) );
-		add_action( 'wp_ajax_nopriv_login', array( $this, 'login' ) );
-		add_action( 'wp_ajax_recover_password', array( $this, 'recover_password' ) );
-		add_action( 'wp_ajax_nopriv_recover_password', array( $this, 'recover_password' ) );
-		add_action( 'wp_ajax_change_password', array( $this, 'change_password' ) );
-		add_action( 'wp_ajax_nopriv_change_password', array( $this, 'change_password' ) );
-		add_action( 'wp_ajax_register', array( $this, 'register' ) );
-		add_action( 'wp_ajax_nopriv_register', array( $this, 'register' ) );
-		add_action( 'wp_ajax_checkout', array( $this, 'checkout' ) );
-		add_action( 'wp_ajax_nopriv_get_order', array( $this, 'get_order' ) );
-		add_action( 'wp_ajax_get_order', array( $this, 'get_order' ) );
-		add_action( 'wp_ajax_nopriv_checkout', array( $this, 'checkout' ) );
-		add_action( 'wp_ajax_get_product', array( $this, 'get_product' ) );
-		add_action( 'wp_ajax_nopriv_get_product', array( $this, 'get_product' ) );
-		add_action( 'wp_ajax_add_to_cart', array( $this, 'add_to_cart' ) );
-		add_action( 'wp_ajax_nopriv_add_to_cart', array( $this, 'add_to_cart' ) );
-		add_action( 'wp_ajax_remove_from_cart', array( $this, 'remove_from_cart' ) );
-		add_action( 'wp_ajax_nopriv_remove_from_cart', array( $this, 'remove_from_cart' ) );
-		add_action( 'wp_ajax_getCart', array( $this, 'getCart' ) );
-		add_action( 'wp_ajax_nopriv_getCart', array( $this, 'getCart' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'ja_global_enqueues' ) );
+		flush_rewrite_rules();
+
+		add_action('wp_ajax_is_logged', array($this, 'is_logged'));
+		add_action('wp_ajax_nopriv_is_logged', array($this, 'is_logged'));
+		add_action('wp_ajax_login', array($this, 'login'));
+		add_action('wp_ajax_nopriv_login', array($this, 'login'));
+		add_action('wp_ajax_recover_password', array($this, 'recover_password'));
+		add_action('wp_ajax_nopriv_recover_password', array($this, 'recover_password'));
+		add_action('wp_ajax_change_password', array($this, 'change_password'));
+		add_action('wp_ajax_nopriv_change_password', array($this, 'change_password'));
+		add_action('wp_ajax_register', array($this, 'register'));
+		add_action('wp_ajax_nopriv_register', array($this, 'register'));
+		add_action('wp_ajax_checkout', array($this, 'checkout'));
+		add_action('wp_ajax_nopriv_get_order', array($this, 'get_order'));
+		add_action('wp_ajax_get_order', array($this, 'get_order'));
+		add_action('wp_ajax_nopriv_checkout', array($this, 'checkout'));
+		add_action('wp_ajax_get_product', array($this, 'get_product'));
+		add_action('wp_ajax_nopriv_get_product', array($this, 'get_product'));
+		add_action('wp_ajax_add_to_cart', array($this, 'add_to_cart'));
+		add_action('wp_ajax_nopriv_add_to_cart', array($this, 'add_to_cart'));
+		add_action('wp_ajax_remove_from_cart', array($this, 'remove_from_cart'));
+		add_action('wp_ajax_nopriv_remove_from_cart', array($this, 'remove_from_cart'));
+		add_action('wp_ajax_getCart', array($this, 'getCart'));
+		add_action('wp_ajax_nopriv_getCart', array($this, 'getCart'));
+		add_action('wp_enqueue_scripts', array($this, 'ja_global_enqueues'));
 	}
 
-	public function ja_global_enqueues() {
-		wp_enqueue_script( 'delivery', plugin_dir_url( __FILE__ ) . 'js/delivery.js', array( 'global' ), '1.0.0', true );
-		wp_enqueue_style( 'delivery', plugin_dir_url( __FILE__ ) . 'css/bootstrap-grid.min.css', array(  ), rand(111, 9999));
+	public function ja_global_enqueues()
+	{
+		wp_enqueue_script('delivery', plugin_dir_url(__FILE__) . 'js/delivery.js', array('global'), '1.0.0', true);
+		wp_enqueue_style('delivery', plugin_dir_url(__FILE__) . 'css/bootstrap-grid.min.css', array(), rand(111, 9999));
 
-		wp_localize_script( 'delivery', 'delivery',
+		wp_localize_script(
+			'delivery',
+			'delivery',
 			array(
-				'ajax' => admin_url( 'admin-ajax.php' ),
+				'ajax' => admin_url('admin-ajax.php'),
 				'gift_label' => __('Regalo', 'mos-theme'),
 				'persons_label' => __('Voucher', 'mos-theme'),
 				'total_label' => __('Totale', 'mos-theme'),
@@ -110,7 +118,8 @@ class Qpc_Delivery {
 				'register_ok_status' => __("Grazie per esserti registrato!", 'mos-theme'),
 				'login_ok_status' => __("Accesso effettuato correttamente", 'mos-theme'),
 				'recover_ok_status' => __("Controlla la tua e-mail e clicca sul pulsante per reimpostare la password.", 'mos-theme'),
-				) );
+			)
+		);
 	}
 
 
@@ -119,11 +128,11 @@ class Qpc_Delivery {
 	 *
 	 * @return mixed|string
 	 */
-	public function getProducts() {
+	public function getProducts()
+	{
 		//print_r($this->_delivery->getProducts());
 
-		return ( $this->_delivery->getProducts() );
-
+		return ($this->_delivery->getProducts());
 	}
 
 	/**
@@ -133,15 +142,15 @@ class Qpc_Delivery {
 	 *
 	 * @return array
 	 */
-	public function getCategoryProducts( $cat_slug ) {
+	public function getCategoryProducts($cat_slug)
+	{
 		$return   = [];
 		$products = $this->getProducts();
-		foreach ( $products['products'] as $product ) {
-			foreach ( $product['categories'] as $category ) {
-				if ( $category['slug'] == $cat_slug && $product['status'] ) {
+		foreach ($products['products'] as $product) {
+			foreach ($product['categories'] as $category) {
+				if ($category['slug'] == $cat_slug && $product['status']) {
 					$return[] = $product;
 				}
-
 			}
 		}
 
@@ -156,7 +165,8 @@ class Qpc_Delivery {
 	 *
 	 * @return array
 	 */
-	public function getProduct( $product_slug ) {
+	public function getProduct($product_slug)
+	{
 		/*
 		$return   = [];
 		$products = $this->getProducts();
@@ -171,7 +181,7 @@ class Qpc_Delivery {
 			}
 		}
 		*/
-		return $this->_delivery->getProduct( $product_slug )['product'];
+		return $this->_delivery->getProduct($product_slug)['product'];
 
 		//
 	}
@@ -181,50 +191,52 @@ class Qpc_Delivery {
 	 *
 	 * @return array
 	 */
-	public function getCategories( $addDegustazioni = true ) {
+	public function getCategories($addDegustazioni = true)
+	{
 		$return     = [];
 		$categories = $this->_delivery->getCategories();
 
 
 		//escludo Root e Degustazioni
-		foreach ( $categories as $category ) {
-			if ( $category['parent_id'] == 1 && $category['menu'] && $category['featured'] == true ) {
-				if ( $addDegustazioni ) {
-					if ( $category['slug'] != 'degustazioni' && $category['slug'] != 'business-lunch' ) {
+		foreach ($categories as $category) {
+			if ($category['parent_id'] == 1 && $category['menu'] && $category['featured'] == true) {
+				if ($addDegustazioni) {
+					if ($category['slug'] != 'degustazioni' && $category['slug'] != 'business-lunch') {
 						$return[] = $category;
 					}
 				} else {
 					$return[] = $category;
-
 				}
 			}
 		}
-		if ( $addDegustazioni ) //Aggiungo le degustazioni singole
+		if ($addDegustazioni) //Aggiungo le degustazioni singole
 		{
-			return array_merge( $return, $this->getCategoryProducts( 'degustazioni' ), $this->getCategoryProducts( 'business-lunch' ) );
+			return array_merge($return, $this->getCategoryProducts('degustazioni'), $this->getCategoryProducts('business-lunch'));
 		}
 
 		return $return;
 		//return ( $this->_delivery->getCategories() );
 	}
 
-	public function getCategory( $cat_slug ) {
-		$category = $this->_delivery->getCategory( $cat_slug );
+	public function getCategory($cat_slug)
+	{
+		$category = $this->_delivery->getCategory($cat_slug);
 
 		//	var_dump($category);
-		return ( $category );
+		return ($category);
 	}
 
-	public function getVouchers() {
+	public function getVouchers()
+	{
 		$return = [];
 
 		$data     = $this->getProducts();
-		
+
 		$products = $data['products'];
 
-		foreach ( $products as $product ) {
-			
-			if ( $product['voucher'] ) {
+		foreach ($products as $product) {
+
+			if ($product['voucher']) {
 				$return[] = $product;
 			}
 		}
@@ -237,10 +249,11 @@ class Qpc_Delivery {
 	 *
 	 * @return mixed|string
 	 */
-	public function getCart() {
+	public function getCart()
+	{
 		global $wpdb;
-		$this->cart = $this->_delivery->getCart( $_POST['deliverySession'] );
-		echo json_encode( $this->_delivery->getCart( $_POST['deliverySession'] ) );
+		$this->cart = $this->_delivery->getCart($_POST['deliverySession']);
+		echo json_encode($this->cart);
 		wp_die();
 	}
 
@@ -248,58 +261,61 @@ class Qpc_Delivery {
 	 * Delivery Register (AJAX)
 	 *
 	 */
-	public function register() {
+	public function register()
+	{
 		global $wpdb;
-		$register_response = $this->_delivery->register( $_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['email'], $_POST['password'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'] ) ;
+		$register_response = $this->_delivery->register($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['email'], $_POST['password'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number']);
 
-		if ($register_response){
-			$login_response = $this->_delivery->login( $_POST['deliverySession'], $_POST['email'], $_POST['password'] );
+		if ($register_response) {
+			$login_response = $this->_delivery->login($_POST['deliverySession'], $_POST['email'], $_POST['password']);
 
 			$this->_mailchimp->addSubscriber($_POST['first_name'], $_POST['last_name'], $_POST['email']);
 
 			echo $login_response['api_token'];
-		}
-		else{
+		} else {
 			echo 0;
 		}
 
 		wp_die();
-
 	}
 
 	/**
 	 * Delivery Login (AJAX)
 	 *
 	 */
-	public function login() {
+	public function login()
+	{
 		global $wpdb;
-		echo json_encode($this->_delivery->login( $_POST['deliverySession'], $_POST['email'], $_POST['password'] ) );
-	//	echo json_encode($this->_delivery->user($api_token));
+		echo json_encode($this->_delivery->login($_POST['deliverySession'], $_POST['email'], $_POST['password']));
+		//	echo json_encode($this->_delivery->user($api_token));
 		wp_die();
 	}
 	/**
 	 * Delivery Recover Password (AJAX)
 	 *
 	 */
-	public function recover_password() {
+	public function recover_password()
+	{
 		global $wpdb;
-		echo json_encode($this->_delivery->recoverPassword( $_POST['email'], $_POST['deliverySession'] ) );
+		echo json_encode($this->_delivery->recoverPassword($_POST['email'], $_POST['deliverySession']));
 		wp_die();
 	}
 	/**
 	 * Delivery Change Password (AJAX)
 	 *
 	 */
-	public function change_password() {
+	public function change_password()
+	{
 		global $wpdb;
-		echo json_encode($this->_delivery->changePassword( $_POST['email'], $_POST['password'], $_POST['password_confirmation'], $_POST['token'] ) );
+		echo json_encode($this->_delivery->changePassword($_POST['email'], $_POST['password'], $_POST['password_confirmation'], $_POST['token']));
 		wp_die();
 	}
 	/**
 	 * Check if is logged in Delivery (AJAX)
 	 *
 	 */
-	public function is_logged() {
+	public function is_logged()
+	{
 		global $wpdb;
 		echo json_encode($this->_delivery->user($_POST['apiToken']));
 		wp_die();
@@ -309,9 +325,10 @@ class Qpc_Delivery {
 	 * Delivery Checkout (AJAX)
 	 *
 	 */
-	public function checkout() {
+	public function checkout()
+	{
 		global $wpdb;
-		$checkout_response = $this->_delivery->checkout( $_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'], $_POST['notes'], $_POST['api_token'], $_POST['voucher_name'], $_POST['voucher_email'] );
+		$checkout_response = $this->_delivery->checkout($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'], $_POST['notes'], $_POST['api_token'], $_POST['voucher_name'], $_POST['voucher_email']);
 		echo json_encode($checkout_response);
 		/*
 		if ($checkout_response === null)
@@ -326,17 +343,19 @@ class Qpc_Delivery {
 	 * Get Delivery Product (AJAX)
 	 *
 	 */
-	public function get_product() {
+	public function get_product()
+	{
 		global $wpdb;
-	//	echo json_encode( $this->_delivery->getProductById( $_POST['productId'] ) );
-		echo json_encode( $this->_delivery->getProduct( $_POST['productId'] ) );
+		//	echo json_encode( $this->_delivery->getProductById( $_POST['productId'] ) );
+		echo json_encode($this->_delivery->getProduct($_POST['productId']));
 		wp_die();
 	}
 
 	/**
 	 * Get Delivery Order by ID (AJAX)
 	 */
-	public function get_order(){
+	public function get_order()
+	{
 		global $wpdb;
 		echo json_encode($this->_delivery->getOrderById($_POST['orderId'], $_POST['deliverySession']));
 		wp_die();
@@ -344,10 +363,11 @@ class Qpc_Delivery {
 	/**
 	 * Aggiungi prodotto al carrello Delivery (AJAX)
 	 */
-	public function add_to_cart() {
+	public function add_to_cart()
+	{
 		global $wpdb;
-		
-		$this->_delivery->addToCart( $_POST['deliverySession'], $_POST['price'], $_POST['productId'], $_POST['calice'], $_POST['attributePrice'], $_POST['attributeId'], $_POST['qty'] );
+
+		$this->_delivery->addToCart($_POST['deliverySession'], $_POST['price'], $_POST['productId'], $_POST['calice'], $_POST['attributePrice'], $_POST['attributeId'], $_POST['attributeId'],  ICL_LANGUAGE_CODE, $_POST['qty']);
 		echo $this->_delivery->getDeliverySession();
 		wp_die();
 	}
@@ -355,9 +375,10 @@ class Qpc_Delivery {
 	/**
 	 * Rimuovi prodotto dal carrello Delivery
 	 */
-	public function remove_from_cart() {
+	public function remove_from_cart()
+	{
 		global $wpdb;
-		$response = $this->_delivery->removeFromCart( $_POST['deliverySession'], $_POST['productId'] );
+		$response = $this->_delivery->removeFromCart($_POST['deliverySession'], $_POST['productId']);
 		echo $response;
 		echo $this->_delivery->getDeliverySession();
 		wp_die();
@@ -371,13 +392,15 @@ class Qpc_Delivery {
 	 *
 	 * @return string
 	 */
-	public function getAttributeValuesHTML( $attributes, $sep = ' | ' ) {
+	public function getAttributeValuesHTML($attributes, $sep = ' | ')
+	{
 		$return = [];
-		foreach ( $attributes as $attribute ) :
-			$return[] = $attribute['title'] . " " .$attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format( $attribute["price"], 0, ",", "" ) . " € </strong>";
+		foreach ($attributes as $attribute) :
+			$return[] = $this->getAttributeTitle($attribute) . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
+		//	$return[] = $attribute['title'] . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
 		endforeach;
 
-		return implode( $sep, $return );
+		return implode($sep, $return);
 	}
 
 	/**
@@ -388,51 +411,107 @@ class Qpc_Delivery {
 	 *
 	 * @return string
 	 */
-	public function getURL( $data ) {
-
+	public function getURL($data)
+	{
+/*
 		$url[] = site_url();
 		$url[] = 'menu';
-		if ( isset( $data['categories'] ) ) {
+*/
+		$url[] = substr(get_permalink($this->get_pages_by_template_filename()->ID), 0,  -1);
+		if (isset($data['categories'])) {
 			$url[] = $data['categories'][0]['slug'];
 		}
-		if ( isset ( $data['category'] ) ) {
-			$url[] = $data['category']['slug'];
+		if (isset($data['category'])) {
+			$url[] = $this->getTranslatedValue($data['category'], 'slug'); //$data['category']['slug'];
 		} else {
-			$url[] = $data['slug'];
+			$url[] = $this->getTranslatedValue($data, 'slug');
 		}
 
-		return implode( "/", $url );
+		return implode("/", $url);
 	}
 
 	/**
 	 * Add tag for Delivery products
 	 */
-	public function product_api_rewrite_tag() {
-		add_rewrite_tag( '%product_slug%', '([^&]+)' );
+	public function product_api_rewrite_tag()
+	{
+		add_rewrite_tag('%product_slug%', '([^&]+)');
 	}
 
 	/**
 	 * Add tag for Delivery products
 	 */
-	public function category_api_rewrite_tag() {
-		add_rewrite_tag( '%category_slug%', '([^&]+)' );
+	public function category_api_rewrite_tag()
+	{
+		add_rewrite_tag('%category_slug%', '([^&]+)');
 	}
 
+	private function get_pages_by_template_filename($page_template_filename = "template-menu.php")
+	{
+		$pages = get_pages(array(
+			'meta_key' => '_wp_page_template',
+			'meta_value' => $page_template_filename
+		));
 
+		if ($pages)
+			return $pages[0]; //solo la prima, altrimenti è un casino!
+
+		return false;
+	}
 	/**
 	 * Add rewrite rule for Delivery product page
 	 */
-	public function product_api_rewrite_rule() {
-		add_rewrite_rule( '^menu/([^/]*)/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]&product_slug=$matches[2]', 'top' );
+	public function product_api_rewrite_rule()
+	{
+		$this->api_rewrite_rule_template('product');
+		//add_rewrite_rule( '^menu/([^/]*)/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]&product_slug=$matches[2]', 'top' );
 	}
 
 	/**
 	 * Add rewrite rule for Delivery category page
 	 */
-	public function category_api_rewrite_rule() {
-		add_rewrite_rule( '^menu/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]', 'top' );
+	public function category_api_rewrite_rule()
+	{
+		$this->api_rewrite_rule_template('category');
+		//add_rewrite_rule( '^menu/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]', 'top' );
+	}
+	private function api_rewrite_rule_template($element_type){
+		if ($page_template_menu = $this->get_pages_by_template_filename()) {
+			
+			$this->api_rewrite_rule_regexp($page_template_menu, $element_type); // LETS GO WILD!!! Rob
+
+
+			$languages = apply_filters( 'wpml_active_languages', NULL, 'orderby=id&order=desc' );
+
+			if ( !empty( $languages ) ) {
+				foreach( $languages as $l ) {
+					if ( !$l['active'] ){
+						$translatedPageID =  apply_filters( 'wpml_object_id',  $page_template_menu->ID , 'page', FALSE, $l['language_code'] );
+						$translatedPage = get_post($translatedPageID);
+						$this->api_rewrite_rule_regexp($translatedPage, $element_type); // LETS GO WILD!!! Rob
+					}
+				
+				}
+			}
+		}
 	}
 
+	private function api_rewrite_rule_regexp($page, $element_type){
+
+		switch ($element_type){
+			case 'product' : 
+			default : 
+				add_rewrite_rule('^' . $page->post_name . '/([^/]*)/([^/]*)/?', 'index.php??page_id=' . $page->ID . '&category_slug=$matches[1]&product_slug=$matches[2]');
+			
+				break;
+			case 'category':			
+				add_rewrite_rule('^' . $page->post_name . '/([^/]*)/?', 'index.php??page_id=' . $page->ID . '&category_slug=$matches[1]', 'top'); // LETS GO WILD!!! Rob
+				break;
+			
+			;
+
+		}
+	}
 	/**
 	 * Prepare an array for category gallery, with images taken for all its single products
 	 *
@@ -440,32 +519,32 @@ class Qpc_Delivery {
 	 *
 	 * @return array
 	 */
-	public function prepareCategoryGalleryData( $products, $category ) {
+	public function prepareCategoryGalleryData($products, $category)
+	{
 		$return = [];
-		foreach ( $products as $product ) :
-			if ( isset( $product['images'] ) && $product['status'] ) {
-				foreach ( $product['images'] as $image ) {
-					if ( $image['resize_1'] ) {
+		foreach ($products as $product) :
+			if (isset($product['images']) && $product['status']) {
+				foreach ($product['images'] as $image) {
+					if ($image['resize_1']) {
 						$return[] = $image["resize_1"];
 					}
-
 				}
 			}
 		endforeach;
-		if ( count( $return ) <= 0 ) {
-			foreach ( $category['category']['images'] as $image ) {
-				if ( $image['resize_1'] ) {
+		if (count($return) <= 0) {
+			foreach ($category['category']['images'] as $image) {
+				if ($image['resize_1']) {
 					$return[] = $image["resize_1"];
 				}
-
 			}
 		}
 
 		return $return;
 	}
 
-	public function getImageForMenuListing( $product ) {
-		if ( count( $product['images'] ) > 0 ) {
+	public function getImageForMenuListing($product)
+	{
+		if (count($product['images']) > 0) {
 			return QPC_DELIVERY_URL . $product['images'][0]['resize_1'];
 		}
 
@@ -475,13 +554,14 @@ class Qpc_Delivery {
 	/**
 	 * Elenco categorie correlate
 	 */
-	public function getRelatedCategories( $category_slug ) {
-		$categories = $this->getCategories( false );
+	public function getRelatedCategories($category_slug)
+	{
+		$categories = $this->getCategories(false);
 		$return     = [];
-		foreach ( $categories as $i => $category ) {
-			if ( $category['slug'] != $category_slug ) {
+		foreach ($categories as $i => $category) {
+			if ($category['slug'] != $category_slug) {
 				$return[] = [
-					"url"  => $this->getURL( $category ),
+					"url"  => $this->getURL($category),
 					"name" => $category['name']
 				];
 			}
@@ -493,13 +573,14 @@ class Qpc_Delivery {
 	/**
 	 * Elenco prodotti correlati
 	 */
-	public function getRelatedProducts( $category_slug, $product_slug ) {
-		$products = $this->getCategoryProducts( $category_slug );
+	public function getRelatedProducts($category_slug, $product_slug)
+	{
+		$products = $this->getCategoryProducts($category_slug);
 		$return   = [];
-		foreach ( $products as $i => $product ) {
-			if ( $product['slug'] != $product_slug && $product['status'] ) {
+		foreach ($products as $i => $product) {
+			if ($product['slug'] != $product_slug && $product['status']) {
 				$return[] = [
-					"url"  => $this->getURL( $product ),
+					"url"  => $this->getURL($product),
 					"name" => $product['name']
 				];
 			}
@@ -509,28 +590,29 @@ class Qpc_Delivery {
 	}
 
 	//Breadcrumb
-	public function getBreadcrumb( $sep = "&raquo;" ) {
+	public function getBreadcrumb($sep = "&raquo;")
+	{
 		global $wp_query;
 		$return = [];
 		//base
-		$urls[0] = [ "url" => site_url(), "name" => "Home" ];
-		$urls[1] = [ "url" => get_permalink( 2697 ), "name" => get_the_title( 2697 ) ];
+		$urls[0] = ["url" => site_url(), "name" => "Home"];
+		$urls[1] = ["url" => get_permalink(2697), "name" => get_the_title(2697)];
 
-		if ( isset( $wp_query->query_vars['category_slug'] ) ) {
-			$category = $this->getCategory( $wp_query->query_vars['category_slug'] );
-			$urls[2]  = [ "url" => $this->getURL( $category ), "name" => $category["category"]['name'] ];
+		if (isset($wp_query->query_vars['category_slug'])) {
+			$category = $this->getCategory($wp_query->query_vars['category_slug']);
+			$urls[2]  = ["url" => $this->getURL($category), "name" => $category["category"]['name']];
 		}
-		if ( isset( $wp_query->query_vars['product_slug'] ) ) {
+		if (isset($wp_query->query_vars['product_slug'])) {
 
-			$product = $this->getProduct( $wp_query->query_vars['product_slug'] );
-			$urls[3] = [ "url" => $this->getURL( $product ), "name" => $product['name'] ];
+			$product = $this->getProduct($wp_query->query_vars['product_slug']);
+			$urls[3] = ["url" => $this->getURL($product), "name" => $product['name']];
 		}
 
-		foreach ( $urls as $url ) {
+		foreach ($urls as $url) {
 			$return[] = "<li><a href='{$url["url"]}'>{$url["name"]}</a></li>";
 		}
 
-		return '<div class="delivery-breadcrumbs"><ul>' . implode( $sep, $return ) . '</ul></div>';
+		return '<div class="delivery-breadcrumbs"><ul>' . implode($sep, $return) . '</ul></div>';
 	}
 
 
@@ -541,20 +623,42 @@ class Qpc_Delivery {
 	 *
 	 * @param $data
 	 */
-	public function getImageForBloccoGallery( $data ) {
-		if ( count( $data['images'] ) > 0 ) {
+	public function getImageForBloccoGallery($data)
+	{
+		if (count($data['images']) > 0) {
 			return QPC_DELIVERY_URL . $data["images"][0]["resize_1"];
 		}
 
-		$products = $this->getCategoryProducts( $data['slug'] );
-		if ( count( $products ) > 0 ) {
-			$gallery = $this->prepareCategoryGalleryData( $products, $data );
-			if ( count( $gallery ) > 0 ) {
+		$products = $this->getCategoryProducts($data['slug']);
+		if (count($products) > 0) {
+			$gallery = $this->prepareCategoryGalleryData($products, $data);
+			if (count($gallery) > 0) {
 				return QPC_DELIVERY_URL . $gallery[0];
 			}
 		}
 
 		return null;
+	}
+
+	//UTILITY MULTILINGUA
+
+	private function getTranslatedValue($variable, $field)
+	{
+		$jsonDecode = json_decode($variable[$field], true);
+		if ($jsonDecode !== null)
+			return ($jsonDecode[ICL_LANGUAGE_CODE]);
+
+		return $variable[$field];
+	}
+
+	public function getProductName($product)
+	{
+		return $this->getTranslatedValue($product, 'name');
+	}
+
+	public function getAttributeTitle($attribute)
+	{
+		return $this->getTranslatedValue($attribute, 'title');
 	}
 }
 

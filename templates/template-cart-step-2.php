@@ -105,10 +105,8 @@ require( 'template-parts/header/no-header.php' );
                                 </span>
                             </span>
 		       <div class="">
-					<?php sprintf(
-						_e( 'Autorizzo il Salvataggio e la Manipolazione dei miei Dati Personali <a href="https://osteriadelviandante.com/privacy-policy/">(GDPR)*.</a>', 'mos-theme' ),
-						esc_url( 'https://osteriadelviandante.com/privacy-policy/' )
-					); ?>
+					<?php
+						_e( 'Autorizzo il Salvataggio e la Manipolazione dei miei Dati Personali <a href="'.get_privacy_policy_url().'">(GDPR)*.</a>', 'mos-theme' ); ?>
 						</div>
                 </div>
                 <div class=" wrap-prenota">
