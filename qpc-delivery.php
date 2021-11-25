@@ -10,15 +10,17 @@ Author URI: https://quartopianocomunicazione.it
 
 include("api/DeliveryAPI.php");
 include("api/MailchimpAPI.php");
+include("mapTranslations.class.php");
 
 /**
  * Currently plugin version.
  */
 define('QPC_DELIVERY_VERSION', '1.0.0');
 
-define('QPC_DELIVERY_BASEURL', 'https://demo.qpcdev.it/storage/app/public/');
-define('QPC_DELIVERY_URL', 'https://demo.qpcdev.it/');
-
+define('QPC_DELIVERY_BASEURL', 'https://ristorantescudiero.finedelivery.it/storage/app/public/');
+define('QPC_DELIVERY_URL', 'https://ristorantescudiero.finedelivery.it/');
+//define('QPC_DELIVERY_BASEURL', 'https://qpc.qpcdev.it/storage/app/public/');
+//
 class Qpc_Delivery
 {
 	/**
@@ -43,7 +45,7 @@ class Qpc_Delivery
 	 * @access  private
 	 * @var     DeliveryAPI
 	 */
-	private $_delivery;
+	private static $_delivery;
 	/**
 	 * Static property to hold our singleton instance
 	 *
@@ -52,8 +54,15 @@ class Qpc_Delivery
 	 * @var     bool
 	 */
 	static $instance = false;
+	/**
+	 * Static property for multilanguage
+	 */
+	private static $lang = 'it';
+	private static $fd_version = 'id'; //oppure 'slug'
 
 	public $cart;
+
+	private static $mapTranslations;
 
 	public function __construct()
 	{
@@ -63,43 +72,64 @@ class Qpc_Delivery
 		} else {
 			$this->version = '1.0.0';
 		}
+
 		$this->plugin_name = 'qpc-delivery';
-		$this->_delivery   = new DeliveryAPI();
 		$this->_mailchimp = new MailchimpAPI();
-
-		add_action('init', array($this, 'product_api_rewrite_tag'));
-		add_action('init', array($this, 'product_api_rewrite_rule'));
-		add_action('init', array($this, 'category_api_rewrite_tag'));
-		add_action('init', array($this, 'category_api_rewrite_rule'));
-
-		flush_rewrite_rules();
-
-		add_action('wp_ajax_is_logged', array($this, 'is_logged'));
-		add_action('wp_ajax_nopriv_is_logged', array($this, 'is_logged'));
-		add_action('wp_ajax_login', array($this, 'login'));
-		add_action('wp_ajax_nopriv_login', array($this, 'login'));
-		add_action('wp_ajax_recover_password', array($this, 'recover_password'));
-		add_action('wp_ajax_nopriv_recover_password', array($this, 'recover_password'));
-		add_action('wp_ajax_change_password', array($this, 'change_password'));
-		add_action('wp_ajax_nopriv_change_password', array($this, 'change_password'));
-		add_action('wp_ajax_register', array($this, 'register'));
-		add_action('wp_ajax_nopriv_register', array($this, 'register'));
-		add_action('wp_ajax_checkout', array($this, 'checkout'));
-		add_action('wp_ajax_nopriv_get_order', array($this, 'get_order'));
-		add_action('wp_ajax_get_order', array($this, 'get_order'));
-		add_action('wp_ajax_nopriv_checkout', array($this, 'checkout'));
-		add_action('wp_ajax_get_product', array($this, 'get_product'));
-		add_action('wp_ajax_nopriv_get_product', array($this, 'get_product'));
-		add_action('wp_ajax_add_to_cart', array($this, 'add_to_cart'));
-		add_action('wp_ajax_nopriv_add_to_cart', array($this, 'add_to_cart'));
-		add_action('wp_ajax_remove_from_cart', array($this, 'remove_from_cart'));
-		add_action('wp_ajax_nopriv_remove_from_cart', array($this, 'remove_from_cart'));
-		add_action('wp_ajax_getCart', array($this, 'getCart'));
-		add_action('wp_ajax_nopriv_getCart', array($this, 'getCart'));
-		add_action('wp_enqueue_scripts', array($this, 'ja_global_enqueues'));
 	}
 
-	public function ja_global_enqueues()
+	public static function register()
+    {
+		if (!self::$instance){
+			self::$instance = true;
+			$plugin = new self();
+			self::detectLanguage();
+
+			self::$_delivery   = new DeliveryAPI();
+
+			if (self::instanceOfMapTranslation()){ /* it's an Ajax call */
+				self::$mapTranslations = new mapTranslations();
+			}
+
+			add_action('init', array($plugin, 'product_api_rewrite_tag'));
+			add_action('init', array($plugin, 'category_api_rewrite_tag'));
+
+			add_filter( 'generate_rewrite_rules', array($plugin, 'finedelivery_api_rewrite_rules' ));
+			add_filter( 'query_vars', array($plugin, 'finedelivery_api_rewrite_filter' ));
+
+			flush_rewrite_rules();
+
+			//	self::mapFDtranslations();
+
+			add_action('wp_ajax_is_logged', array($plugin, 'is_logged'));
+			add_action('wp_ajax_nopriv_is_logged', array($plugin, 'is_logged'));
+			add_action('wp_ajax_login', array($plugin, 'login'));
+			add_action('wp_ajax_nopriv_login', array($plugin, 'login'));
+			add_action('wp_ajax_recover_password', array($plugin, 'recover_password'));
+			add_action('wp_ajax_nopriv_recover_password', array($plugin, 'recover_password'));
+			add_action('wp_ajax_change_password', array($plugin, 'change_password'));
+			add_action('wp_ajax_nopriv_change_password', array($plugin, 'change_password'));
+			add_action('wp_ajax_register_user', array($plugin, 'register_user'));
+			add_action('wp_ajax_nopriv_register_user', array($plugin, 'register_user'));
+			add_action('wp_ajax_checkout', array($plugin, 'checkout'));
+			add_action('wp_ajax_nopriv_get_order', array($plugin, 'get_order'));
+			add_action('wp_ajax_get_order', array($plugin, 'get_order'));
+			add_action('wp_ajax_nopriv_checkout', array($plugin, 'checkout'));
+			add_action('wp_ajax_get_product', array($plugin, 'get_product'));
+			add_action('wp_ajax_nopriv_get_product', array($plugin, 'get_product'));
+			add_action('wp_ajax_add_to_cart', array($plugin, 'add_to_cart'));
+			add_action('wp_ajax_nopriv_add_to_cart', array($plugin, 'add_to_cart'));
+			add_action('wp_ajax_remove_from_cart', array($plugin, 'remove_from_cart'));
+			add_action('wp_ajax_nopriv_remove_from_cart', array($plugin, 'remove_from_cart'));
+			add_action('wp_ajax_getCart', array($plugin, 'getCart'));
+			add_action('wp_ajax_nopriv_getCart', array($plugin, 'getCart'));
+			add_action('wp_ajax_forceRightPermalinkInWPMLSwitcher', array($plugin, 'forceRightPermalinkInWPMLSwitcher'));
+			add_action('wp_ajax_nopriv_forceRightPermalinkInWPMLSwitcher', array($plugin, 'forceRightPermalinkInWPMLSwitcher'));
+			add_action('wp_enqueue_scripts', array($plugin, 'ja_global_enqueues'));
+		}
+
+	}
+
+	public static function ja_global_enqueues()
 	{
 		wp_enqueue_script('delivery', plugin_dir_url(__FILE__) . 'js/delivery.js', array('global'), '1.0.0', true);
 		wp_enqueue_style('delivery', plugin_dir_url(__FILE__) . 'css/bootstrap-grid.min.css', array(), rand(111, 9999));
@@ -117,22 +147,45 @@ class Qpc_Delivery
 				'paypal_status' => __("Stai per essere reindirizzato sul sito di PayPal...", 'mos-theme'),
 				'register_ok_status' => __("Grazie per esserti registrato!", 'mos-theme'),
 				'login_ok_status' => __("Accesso effettuato correttamente", 'mos-theme'),
-				'recover_ok_status' => __("Controlla la tua e-mail e clicca sul pulsante per reimpostare la password.", 'mos-theme'),
+				'recover_ok_status' => __("Controlla la tua e-mail e clicca sul pulsante per reimpostare la password.", 'mos-theme')
 			)
 		);
 	}
 
 
+	// Siccome esistono più versioni di finedelivery (chiamate con ID // chiamate con slug // slug stringa // slug json)
+	// Creiamo una sorta di fallback per mantenere compatibilità e cercare di minimizzare comunque il numero di chiamate all'API
+	private static function instanceOfMapTranslation(){
+		if (defined('DOING_AJAX') && DOING_AJAX) //MAI NEL CONTESTO AJAX!
+			return false;
+
+		//testo il funzionamento dell'API - se funziona con id o slug - con la prima categoria
+		$categories = self::$_delivery->getCategories();
+		foreach ($categories as $category)
+			if ($category['featured']){
+				$cat_test = self::$_delivery->getCategory($category['id']);
+				break;
+			}
+		if ($cat_test){ //se funziona con l'ID, il mapping è necessario
+			self::$fd_version = 'id';
+			return true;
+		}else{ //se funziona con lo slug, il mapping è necessario SOLO se non sono in italiano
+			self::$fd_version = 'slug';
+			if (self::$lang == 'it')
+				return false;
+		}
+
+	}
 	/**
 	 * Get all Delivery products
 	 *
 	 * @return mixed|string
 	 */
-	public function getProducts()
+	public static function getProducts()
 	{
-		//print_r($this->_delivery->getProducts());
+		//print_r(self::$_delivery->getProducts());
 
-		return ($this->_delivery->getProducts());
+		return (self::$_delivery->getProducts());
 	}
 
 	/**
@@ -142,13 +195,14 @@ class Qpc_Delivery
 	 *
 	 * @return array
 	 */
-	public function getCategoryProducts($cat_slug)
+	public static function getCategoryProducts($cat_slug)
 	{
 		$return   = [];
-		$products = $this->getProducts();
+		$products = self::getProducts();
+		$cat_slug = urlencode($cat_slug);
 		foreach ($products['products'] as $product) {
 			foreach ($product['categories'] as $category) {
-				if ($category['slug'] == $cat_slug && $product['status']) {
+				if (($category['slug'] == $cat_slug || self::getTranslatedValue($category, 'slug') == $cat_slug) && $product['status']) {
 					$return[] = $product;
 				}
 			}
@@ -165,23 +219,16 @@ class Qpc_Delivery
 	 *
 	 * @return array
 	 */
-	public function getProduct($product_slug)
+	public static function getProduct($product_slug)
 	{
-		/*
-		$return   = [];
-		$products = $this->getProducts();
-		foreach ( $products['data'] as $product ) {
-			if ( $product['slug'] == $product_slug ) {
-				foreach ( $product['categories'] as $category ) {
-					if ( $category['slug'] == $cat_slug ) {
-						return $product;
-					}
-
-				}
-			}
+		$product_slug = urldecode($product_slug);
+		if (self::$fd_version==='id'){
+			$product_slug_ = self::$mapTranslations->getProductSlugTranslation(ICL_LANGUAGE_CODE, $product_slug);
+			$returnProduct = (self::$_delivery->getProduct($product_slug_)['product']);
+			if ($returnProduct!==null)	return $returnProduct;
 		}
-		*/
-		return $this->_delivery->getProduct($product_slug)['product'];
+
+		return self::$_delivery->getProduct($product_slug)['product'];
 
 		//
 	}
@@ -191,17 +238,18 @@ class Qpc_Delivery
 	 *
 	 * @return array
 	 */
-	public function getCategories($addDegustazioni = true)
+	public static function getCategories($addDegustazioni = true)
 	{
 		$return     = [];
-		$categories = $this->_delivery->getCategories();
+		$categories = self::$_delivery->getCategories();
 
 
 		//escludo Root e Degustazioni
 		foreach ($categories as $category) {
 			if ($category['parent_id'] == 1 && $category['menu'] && $category['featured'] == true) {
 				if ($addDegustazioni) {
-					if ($category['slug'] != 'degustazioni' && $category['slug'] != 'business-lunch') {
+				//	if ($category['slug'] != 'degustazioni' && $category['slug'] != 'business-lunch') {
+					if ($category['slug'] != 'degustazioni') {
 						$return[] = $category;
 					}
 				} else {
@@ -211,36 +259,41 @@ class Qpc_Delivery
 		}
 		if ($addDegustazioni) //Aggiungo le degustazioni singole
 		{
-			return array_merge($return, $this->getCategoryProducts('degustazioni'), $this->getCategoryProducts('business-lunch'));
+			return array_merge($return, self::getCategoryProducts('degustazioni'));
+			//return array_merge($return, self::getCategoryProducts('degustazioni'), self::getCategoryProducts('business-lunch'));
 		}
 
 		return $return;
-		//return ( $this->_delivery->getCategories() );
+		//return ( self::$_delivery->getCategories() );
 	}
 
-	public function getCategory($cat_slug)
+	public static function getCategory($cat_slug)
 	{
-		$category = $this->_delivery->getCategory($cat_slug);
+		if (self::$fd_version == 'id'){
+			$cat_slug_ = (self::$mapTranslations->getCategorySlugTranslation(ICL_LANGUAGE_CODE, $cat_slug));
+			$returnCategory = (self::$_delivery->getCategory($cat_slug_));
+			if ($returnCategory) return $returnCategory;
+		}
+		return self::$_delivery->getCategory($cat_slug);
+}
 
-		//	var_dump($category);
-		return ($category);
-	}
-
-	public function getVouchers()
+	public static function getVouchers()
 	{
 		$return = [];
 
-		$data     = $this->getProducts();
+		$data     = self::getProducts();
 
 		$products = $data['products'];
 
-		foreach ($products as $product) {
+		foreach ($products as $i => $product) {
 
 			if ($product['voucher']) {
-				$return[] = $product;
+				$order = ($product['order']=='' ? $i : (int) $product['order']);
+				$return[$order] = $product;
 			}
 		}
 
+		ksort($return);
 		return $return;
 	}
 
@@ -249,11 +302,12 @@ class Qpc_Delivery
 	 *
 	 * @return mixed|string
 	 */
-	public function getCart()
+	public static function getCart()
 	{
 		global $wpdb;
-		$this->cart = $this->_delivery->getCart($_POST['deliverySession']);
-		echo json_encode($this->cart);
+
+		if (isset($_POST['deliverySession']))
+			echo json_encode(self::$_delivery->getCart($_POST['deliverySession']));
 		wp_die();
 	}
 
@@ -261,19 +315,21 @@ class Qpc_Delivery
 	 * Delivery Register (AJAX)
 	 *
 	 */
-	public function register()
+	public  function register_user()
 	{
 		global $wpdb;
-		$register_response = $this->_delivery->register($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['email'], $_POST['password'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number']);
+		$register_response = self::$_delivery->register($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['email'], $_POST['password'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number']);
 
 		if ($register_response) {
-			$login_response = $this->_delivery->login($_POST['deliverySession'], $_POST['email'], $_POST['password']);
 
+			$login_response = self::$_delivery->login($_POST['deliverySession'], $_POST['email'], $_POST['password']);
 			$this->_mailchimp->addSubscriber($_POST['first_name'], $_POST['last_name'], $_POST['email']);
-
 			echo $login_response['api_token'];
+
 		} else {
+
 			echo 0;
+
 		}
 
 		wp_die();
@@ -283,11 +339,11 @@ class Qpc_Delivery
 	 * Delivery Login (AJAX)
 	 *
 	 */
-	public function login()
+	public  function login()
 	{
 		global $wpdb;
-		echo json_encode($this->_delivery->login($_POST['deliverySession'], $_POST['email'], $_POST['password']));
-		//	echo json_encode($this->_delivery->user($api_token));
+		echo json_encode(self::$_delivery->login($_POST['deliverySession'], $_POST['email'], $_POST['password']));
+		//	echo json_encode(self::$_delivery->user($api_token));
 		wp_die();
 	}
 	/**
@@ -297,7 +353,7 @@ class Qpc_Delivery
 	public function recover_password()
 	{
 		global $wpdb;
-		echo json_encode($this->_delivery->recoverPassword($_POST['email'], $_POST['deliverySession']));
+		echo json_encode(self::$_delivery->recoverPassword($_POST['email'], $_POST['deliverySession']));
 		wp_die();
 	}
 	/**
@@ -307,7 +363,7 @@ class Qpc_Delivery
 	public function change_password()
 	{
 		global $wpdb;
-		echo json_encode($this->_delivery->changePassword($_POST['email'], $_POST['password'], $_POST['password_confirmation'], $_POST['token']));
+		echo json_encode(self::$_delivery->changePassword($_POST['email'], $_POST['password'], $_POST['password_confirmation'], $_POST['token']));
 		wp_die();
 	}
 	/**
@@ -317,7 +373,7 @@ class Qpc_Delivery
 	public function is_logged()
 	{
 		global $wpdb;
-		echo json_encode($this->_delivery->user($_POST['apiToken']));
+		echo json_encode(self::$_delivery->user($_POST['apiToken']));
 		wp_die();
 	}
 
@@ -328,14 +384,9 @@ class Qpc_Delivery
 	public function checkout()
 	{
 		global $wpdb;
-		$checkout_response = $this->_delivery->checkout($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'], $_POST['notes'], $_POST['api_token'], $_POST['voucher_name'], $_POST['voucher_email']);
+		$checkout_response = self::$_delivery->checkout($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'], $_POST['notes'], $_POST['api_token'], $_POST['voucher_name'], $_POST['voucher_email']);
 		echo json_encode($checkout_response);
-		/*
-		if ($checkout_response === null)
-			echo 0;
-		else
-			echo $checkout_response;
-		*/
+
 		wp_die();
 	}
 
@@ -347,7 +398,7 @@ class Qpc_Delivery
 	{
 		global $wpdb;
 		//	echo json_encode( $this->_delivery->getProductById( $_POST['productId'] ) );
-		echo json_encode($this->_delivery->getProduct($_POST['productId']));
+		echo json_encode(self::$_delivery->getProduct($_POST['productId']));
 		wp_die();
 	}
 
@@ -357,7 +408,7 @@ class Qpc_Delivery
 	public function get_order()
 	{
 		global $wpdb;
-		echo json_encode($this->_delivery->getOrderById($_POST['orderId'], $_POST['deliverySession']));
+		echo json_encode(self::$_delivery->getOrderById($_POST['orderId'], $_POST['deliverySession']));
 		wp_die();
 	}
 	/**
@@ -367,20 +418,22 @@ class Qpc_Delivery
 	{
 		global $wpdb;
 
-		$this->_delivery->addToCart($_POST['deliverySession'], $_POST['price'], $_POST['productId'], $_POST['calice'], $_POST['attributePrice'], $_POST['attributeId'], $_POST['attributeId'],  ICL_LANGUAGE_CODE, $_POST['qty']);
-		echo $this->_delivery->getDeliverySession();
+		$this->detectLanguage();
+		error_log(json_encode($_POST, true));
+		self::$_delivery->addToCart($_POST['deliverySession'], $_POST['price'], $_POST['productId'], $_POST['calice'], $_POST['attributePrice'], $_POST['attributeId'], $_POST['attributeId'], self::$lang, $_POST['qty']);
+		echo self::$_delivery->getDeliverySession();
 		wp_die();
 	}
 
 	/**
-	 * Rimuovi prodotto dal carrello Delivery
+	 * Rimuovi prodotto dal carrello Delivery (AJAX)
 	 */
 	public function remove_from_cart()
 	{
 		global $wpdb;
-		$response = $this->_delivery->removeFromCart($_POST['deliverySession'], $_POST['productId']);
-		echo $response;
-		echo $this->_delivery->getDeliverySession();
+		$response = self::$_delivery->removeFromCart($_POST['deliverySession'], $_POST['productId']);
+	//	echo $response;
+		echo self::$_delivery->getDeliverySession();
 		wp_die();
 	}
 
@@ -392,11 +445,11 @@ class Qpc_Delivery
 	 *
 	 * @return string
 	 */
-	public function getAttributeValuesHTML($attributes, $sep = ' | ')
+	public static function getAttributeValuesHTML($attributes, $sep = ' | ')
 	{
 		$return = [];
 		foreach ($attributes as $attribute) :
-			$return[] = $this->getAttributeTitle($attribute) . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
+			$return[] = self::getAttributeTitle($attribute) . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
 		//	$return[] = $attribute['title'] . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
 		endforeach;
 
@@ -411,20 +464,20 @@ class Qpc_Delivery
 	 *
 	 * @return string
 	 */
-	public function getURL($data)
+	public static function getURL($data)
 	{
-/*
+		/*
 		$url[] = site_url();
 		$url[] = 'menu';
 */
-		$url[] = substr(get_permalink($this->get_pages_by_template_filename()->ID), 0,  -1);
+		$url[] = substr(get_permalink(self::get_pages_by_template_filename()->ID), 0,  -1);
 		if (isset($data['categories'])) {
-			$url[] = $data['categories'][0]['slug'];
+			$url[] = self::getTranslatedValue($data['categories'][0], 'slug'); //$data['categories'][0]['slug'];
 		}
 		if (isset($data['category'])) {
-			$url[] = $this->getTranslatedValue($data['category'], 'slug'); //$data['category']['slug'];
+			$url[] = self::getTranslatedValue($data['category'], 'slug'); //$data['category']['slug'];
 		} else {
-			$url[] = $this->getTranslatedValue($data, 'slug');
+			$url[] = self::getTranslatedValue($data, 'slug');
 		}
 
 		return implode("/", $url);
@@ -433,7 +486,7 @@ class Qpc_Delivery
 	/**
 	 * Add tag for Delivery products
 	 */
-	public function product_api_rewrite_tag()
+	public static function product_api_rewrite_tag()
 	{
 		add_rewrite_tag('%product_slug%', '([^&]+)');
 	}
@@ -441,12 +494,12 @@ class Qpc_Delivery
 	/**
 	 * Add tag for Delivery products
 	 */
-	public function category_api_rewrite_tag()
+	public static function category_api_rewrite_tag()
 	{
 		add_rewrite_tag('%category_slug%', '([^&]+)');
 	}
 
-	private function get_pages_by_template_filename($page_template_filename = "template-menu.php")
+	private static function get_pages_by_template_filename($page_template_filename = "template-menu.php")
 	{
 		$pages = get_pages(array(
 			'meta_key' => '_wp_page_template',
@@ -458,59 +511,38 @@ class Qpc_Delivery
 
 		return false;
 	}
+
 	/**
 	 * Add rewrite rule for Delivery product page
 	 */
-	public function product_api_rewrite_rule()
-	{
-		$this->api_rewrite_rule_template('product');
-		//add_rewrite_rule( '^menu/([^/]*)/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]&product_slug=$matches[2]', 'top' );
-	}
-
-	/**
-	 * Add rewrite rule for Delivery category page
-	 */
-	public function category_api_rewrite_rule()
-	{
-		$this->api_rewrite_rule_template('category');
-		//add_rewrite_rule( '^menu/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]', 'top' );
-	}
-	private function api_rewrite_rule_template($element_type){
-		if ($page_template_menu = $this->get_pages_by_template_filename()) {
-			
-			$this->api_rewrite_rule_regexp($page_template_menu, $element_type); // LETS GO WILD!!! Rob
+	public static function finedelivery_api_rewrite_rules( $wp_rewrite ) {
 
 
-			$languages = apply_filters( 'wpml_active_languages', NULL, 'orderby=id&order=desc' );
+		if ($page_template_menu = self::get_pages_by_template_filename()) {
 
-			if ( !empty( $languages ) ) {
-				foreach( $languages as $l ) {
-					if ( !$l['active'] ){
-						$translatedPageID =  apply_filters( 'wpml_object_id',  $page_template_menu->ID , 'page', FALSE, $l['language_code'] );
+			$languages = apply_filters('wpml_active_languages', NULL, 'orderby=id&order=desc');
+
+			if (!empty($languages)) {
+				foreach ($languages as $l) {
+					if ($l['active']) {
+						$translatedPageID =  apply_filters('wpml_object_id',  $page_template_menu->ID, 'page', FALSE, $l['language_code']);
 						$translatedPage = get_post($translatedPageID);
-						$this->api_rewrite_rule_regexp($translatedPage, $element_type); // LETS GO WILD!!! Rob
+						$lang_prefix = (($l['code'] == ICL_LANGUAGE_CODE) ? '' : $l['code'].'/' );
+						$fd_rules = array(
+							 $lang_prefix.$translatedPage->post_name . '/(.+)/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]&product_slug=$matches[2]',
+							 $lang_prefix.$translatedPage->post_name . '/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]'
+						);
 					}
-				
 				}
 			}
 		}
+
+		$wp_rewrite->rules = $fd_rules + $wp_rewrite->rules;
 	}
-
-	private function api_rewrite_rule_regexp($page, $element_type){
-
-		switch ($element_type){
-			case 'product' : 
-			default : 
-				add_rewrite_rule('^' . $page->post_name . '/([^/]*)/([^/]*)/?', 'index.php??page_id=' . $page->ID . '&category_slug=$matches[1]&product_slug=$matches[2]');
-			
-				break;
-			case 'category':			
-				add_rewrite_rule('^' . $page->post_name . '/([^/]*)/?', 'index.php??page_id=' . $page->ID . '&category_slug=$matches[1]', 'top'); // LETS GO WILD!!! Rob
-				break;
-			
-			;
-
-		}
+	public static function finedelivery_api_rewrite_filter( $query_vars ){
+		$query_vars[] = 'category_slug';
+		$query_vars[] = 'product_slug';
+		return $query_vars;
 	}
 	/**
 	 * Prepare an array for category gallery, with images taken for all its single products
@@ -519,7 +551,7 @@ class Qpc_Delivery
 	 *
 	 * @return array
 	 */
-	public function prepareCategoryGalleryData($products, $category)
+	public static function prepareCategoryGalleryData($products, $category)
 	{
 		$return = [];
 		foreach ($products as $product) :
@@ -531,7 +563,7 @@ class Qpc_Delivery
 				}
 			}
 		endforeach;
-		if (count($return) <= 0) {
+		if (count($category['category']['images']) > 0) {
 			foreach ($category['category']['images'] as $image) {
 				if ($image['resize_1']) {
 					$return[] = $image["resize_1"];
@@ -542,7 +574,7 @@ class Qpc_Delivery
 		return $return;
 	}
 
-	public function getImageForMenuListing($product)
+	public static function getImageForMenuListing($product)
 	{
 		if (count($product['images']) > 0) {
 			return QPC_DELIVERY_URL . $product['images'][0]['resize_1'];
@@ -554,14 +586,14 @@ class Qpc_Delivery
 	/**
 	 * Elenco categorie correlate
 	 */
-	public function getRelatedCategories($category_slug)
+	public static function getRelatedCategories($category_slug)
 	{
-		$categories = $this->getCategories(false);
+		$categories = self::getCategories(false);
 		$return     = [];
 		foreach ($categories as $i => $category) {
 			if ($category['slug'] != $category_slug) {
 				$return[] = [
-					"url"  => $this->getURL($category),
+					"url"  => self::getURL($category),
 					"name" => $category['name']
 				];
 			}
@@ -573,14 +605,14 @@ class Qpc_Delivery
 	/**
 	 * Elenco prodotti correlati
 	 */
-	public function getRelatedProducts($category_slug, $product_slug)
+	public static function getRelatedProducts($category_slug, $product_slug)
 	{
-		$products = $this->getCategoryProducts($category_slug);
+		$products = self::getCategoryProducts($category_slug);
 		$return   = [];
 		foreach ($products as $i => $product) {
 			if ($product['slug'] != $product_slug && $product['status']) {
 				$return[] = [
-					"url"  => $this->getURL($product),
+					"url"  => self::getURL($product),
 					"name" => $product['name']
 				];
 			}
@@ -590,22 +622,28 @@ class Qpc_Delivery
 	}
 
 	//Breadcrumb
-	public function getBreadcrumb($sep = "&raquo;")
+	public static function getBreadcrumb($category, $product, $sep = "&raquo;")
 	{
 		global $wp_query;
 		$return = [];
 		//base
 		$urls[0] = ["url" => site_url(), "name" => "Home"];
-		$urls[1] = ["url" => get_permalink(2697), "name" => get_the_title(2697)];
 
-		if (isset($wp_query->query_vars['category_slug'])) {
-			$category = $this->getCategory($wp_query->query_vars['category_slug']);
-			$urls[2]  = ["url" => $this->getURL($category), "name" => $category["category"]['name']];
+		//pagina menù
+		$menu_page_id = $wp_query->queried_object_id;
+		if (defined('ICL_LANGUAGE_CODE')){
+			$menu_url = apply_filters('wpml_permalink', get_permalink($menu_page_id), ICL_LANGUAGE_CODE );
+		}else{
+			$menu_url = get_permalink();
 		}
-		if (isset($wp_query->query_vars['product_slug'])) {
-
-			$product = $this->getProduct($wp_query->query_vars['product_slug']);
-			$urls[3] = ["url" => $this->getURL($product), "name" => $product['name']];
+		$urls[1] = ["url" => $menu_url, "name" => get_the_title($menu_page_id)];
+		// categoria
+		if ($category) {
+			if ($category!==null)
+				$urls[2]  = ["url" => self::getURL($category), "name" => self::getCategoryName($category['category'])];
+		}
+		if ($product) {
+			$urls[3] = ["url" => self::getURL($product), "name" => self::getProductName($product)];
 		}
 
 		foreach ($urls as $url) {
@@ -623,15 +661,15 @@ class Qpc_Delivery
 	 *
 	 * @param $data
 	 */
-	public function getImageForBloccoGallery($data)
+	public static function getImageForBloccoGallery($data)
 	{
 		if (count($data['images']) > 0) {
 			return QPC_DELIVERY_URL . $data["images"][0]["resize_1"];
 		}
-
-		$products = $this->getCategoryProducts($data['slug']);
+		var_dump(self::getTranslatedValue($data, 'slug'));
+		$products = self::getCategoryProducts( self::getTranslatedValue($data, 'slug') );
 		if (count($products) > 0) {
-			$gallery = $this->prepareCategoryGalleryData($products, $data);
+			$gallery = self::prepareCategoryGalleryData( $products, $data );
 			if (count($gallery) > 0) {
 				return QPC_DELIVERY_URL . $gallery[0];
 			}
@@ -642,24 +680,81 @@ class Qpc_Delivery
 
 	//UTILITY MULTILINGUA
 
-	private function getTranslatedValue($variable, $field)
+	private static function getTranslatedValue($variable, $field)
 	{
+		self::detectLanguage();
 		$jsonDecode = json_decode($variable[$field], true);
 		if ($jsonDecode !== null)
-			return ($jsonDecode[ICL_LANGUAGE_CODE]);
+			return ($jsonDecode[self::$lang]);
 
 		return $variable[$field];
 	}
 
-	public function getProductName($product)
+	private static function detectLanguage()
 	{
-		return $this->getTranslatedValue($product, 'name');
+		if (defined('ICL_LANGUAGE_CODE')) {
+			self::$lang = ICL_LANGUAGE_CODE;
+		} else {
+			self::$lang = 'it';
+		}
+	}
+	public static function getProductSlug($product)
+	{
+		return self::getTranslatedValue($product, 'slug');
+	}
+	public static function getProductName($product)
+	{
+		return self::getTranslatedValue($product, 'name');
+	}
+	public static function getProductDescription($product)
+	{
+		return self::getTranslatedValue($product, 'description');
 	}
 
-	public function getAttributeTitle($attribute)
+	public static function getAttributeTitle($attribute)
 	{
-		return $this->getTranslatedValue($attribute, 'title');
+		return self::getTranslatedValue($attribute, 'title');
 	}
+
+	public static function getCategoryName($category)
+	{
+		return self::getTranslatedValue($category, 'name');
+	}
+
+
+	// CAMBIA GLI URL DELLO SWITCHER DELLA LINGUA DI WPML (AJAX)
+	public function forceRightPermalinkInWPMLSwitcher(){
+		global $wpdb;
+
+		global $sitepress;
+
+		$return['wpml-ls-item-'.ICL_LANGUAGE_CODE] = $_POST['url'];
+		if (defined('ICL_LANGUAGE_CODE')){
+			//se la pagina è template-menu.php
+			$page_template_menu = self::get_pages_by_template_filename();
+			$url_page_menu = apply_filters('wpml_permalink', get_permalink($page_template_menu), ICL_LANGUAGE_CODE );
+			if ($page_template_menu && strpos($_POST['url'], $url_page_menu)!==false){
+				if (self::$mapTranslations === null) self::$mapTranslations = new mapTranslations();
+				//tolgo l'url della pagina menu dal $_post['url'] per estrarre gli slug della categoria e del prodotto
+				$slugs = explode("/", str_replace($url_page_menu, "", $_POST['url']));
+				$languages = apply_filters('wpml_active_languages', NULL, 'orderby=id&order=desc');
+				//
+				if (!empty($languages)) {
+					foreach ($languages as $l) {
+						if ( $l['code'] !== ICL_LANGUAGE_CODE ){
+							$translatedPageID = apply_filters('wpml_object_id',  $page_template_menu->ID, 'page', FALSE, $l['code']);
+							$translatedUrl = apply_filters('wpml_permalink', get_permalink($translatedPageID) , $l['code'] );
+
+							$return['wpml-ls-item-'.$l['code']] = $translatedUrl . self::$mapTranslations->getCategoryTranslationFromTo(ICL_LANGUAGE_CODE, $l['code'], $slugs[0]) .'/'. self::$mapTranslations->getProductTranslationFromTo(ICL_LANGUAGE_CODE, $l['code'], $slugs[1]);
+						}
+					}
+				}
+			}
+			echo json_encode($return);
+			die();
+		}
+	}
+
 }
 
-$QPC_Delivery = new QPC_Delivery();
+QPC_Delivery::register();

@@ -2,7 +2,8 @@
 
 
 class DeliveryAPI {
-	const API_BASEURL = "https://demo.qpcdev.it/api/";
+	const API_BASEURL = "https://ristorantescudiero.finedelivery.it/api/";
+ 	//const API_BASEURL = "https://qpc.qpcdev.it/api/";
 
 	private $deliverySession;
 
@@ -24,6 +25,9 @@ class DeliveryAPI {
 				"cache-control: no-cache"
 			),
 		) );
+
+		//$dbts = debug_backtrace();
+        //foreach ($dbts as $i => $dbt)	error_log("deliveryAPI $i :: ".$dbt["function"]." ".$dbt["file"].":".$dbt["line"]);
 		return $this->executeGETcurl( $curl );
 	}
 
@@ -318,8 +322,9 @@ class DeliveryAPI {
 				"Cookie: delivery_session=$deliverySession"
 			),
 		);
-		curl_setopt_array( $curl, $data );
 
+
+		curl_setopt_array( $curl, $data );
 		$response = curl_exec( $curl );
 		$err      = curl_error( $curl );
 
@@ -342,7 +347,6 @@ class DeliveryAPI {
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
 			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_SSL_VERIFYPEER => 0,
 			CURLOPT_HEADER         => 1,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
@@ -350,15 +354,15 @@ class DeliveryAPI {
 			CURLOPT_HTTPHEADER     => array(
 				"Content-Type: application/x-www-form-urlencoded",
 				"Cookie: delivery_session=$deliverySession"
-			),
+			)
 		);
-
 		curl_setopt_array( $curl, $data );
 		$response = curl_exec( $curl );
 		$err      = curl_error( $curl );
+
 		if ( $err ) {
 			return "cURL Error #:" . $err;
-		} 
+		}
 			return json_decode( $response, true );
 	}
 

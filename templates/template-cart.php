@@ -17,11 +17,12 @@ require( 'template-parts/header/no-header.php' );
     <div class="" data-scroll data-scroll-speed="2">
         <h3 class="o-h1"><?php the_title(); ?></h3>
     </div>
+    <div class="grifone" data-scroll data-scroll-speed="-4"></div>
     <div data-scroll data-scroll-speed="4" class="wrap-prenota" id="delivery-cart" >
     </div>
     <div class=" wrap-prenota">
         <div class="wpcf7 buttons">
-            <a href="<?= get_permalink( get_page_by_path( 'regala-un-esperienza' ) ) ?>">⥢ <?php esc_html_e( "Torna agli acquisti", 'mos-theme' ); ?></a>
+            <a href="<?= get_permalink( get_page_by_path( 'regala-un-esperienza' ) ) ?>">⥢ <?php esc_html_e( "Torna agli acquisti", "mos-theme" ); ?></a>
             <a class="btn-add-to-cart btn btn-black"
                href="<?= get_permalink( get_page_by_path( 'delivery-login' ) ); ?>"><?php esc_html_e( "Procedi con l'ordine", "mos-theme" ); ?></a>
         </div>

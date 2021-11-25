@@ -1,6 +1,6 @@
+/* globals delivery */
 var $ = jQuery;
 
-        getCartCount(); //aggiunge il numero di elementi nel carrello al menù "regala un'esperienza"
         // login
         $(document).on("click", ".delivery-login", function (event) {
             if (getFormValidity(this)) {
@@ -140,7 +140,7 @@ var $ = jQuery;
                     post_code: $("#post_code").val(),
                     phone_number: $("#phone_number").val(),
                     deliverySession: Cookies.get("delivery-session"),
-                    action: "register",
+                    action: "register_user",
                     beforeSend: function () { // Before we send the request, remove the .hidden class from the spinner and default to inline-block.
                         $("#loader").removeClass("hidden");
                         // console.log("removeHidden delivery-register");
@@ -201,6 +201,8 @@ var $ = jQuery;
                     }
                 }, function (res) {
                     $("#loader").addClass("hidden");
+                    console.log("OBJ");
+                    console.dir(res);
                     // console.log("addClass delivery-checkout");
                     var obj = JSON.parse(res);
                     if (obj.redirect){
@@ -221,12 +223,13 @@ var $ = jQuery;
 
         // add/cart
         $(document).on("click change paste", ".delivery-add-to-cart", function (event) {
+            event.preventDefault();
             event.stopImmediatePropagation();
 
             var qty;
             if ($(this).is("input")) {
                 qty = parseInt($(this).val()) - parseInt($(this).attr("delivery-qty"));
-                  console.log($(this).val()+' '+ $(this).attr("delivery-qty")+' '+qty);
+           //       console.log($(this).val()+' '+ $(this).attr("delivery-qty")+' '+qty);
             } else {
                 qty = parseInt($(this).attr("delivery-qty"));
             }
@@ -247,7 +250,6 @@ var $ = jQuery;
                 attributeTheId = $(this).attr("delivery-attributeTheId");
             }
             if (qty !== 0) {
-                //aggiungi al carrello
                 $.post(delivery.ajax, {
                     price: $(this).attr("delivery-price"),
                     attributePrice: attributePrice,
@@ -259,22 +261,23 @@ var $ = jQuery;
                     deliverySession: Cookies.get("delivery-session"),
                     action: "add_to_cart",
                     beforeSend: function () { // Before we send the request, remove the .hidden class from the spinner and default to inline-block.
+                        
                         $("#loader").removeClass("hidden");
                          //console.log("removeClass delivery-add-to-cart");
                     }
                 }, function (res) {
-                    
+
                     Cookies.set("delivery-session", res, {expires: 36000 });
                     getCartCount();
-                    
+
                     if ($("#delivery-cart").length === 1) {
                         $("#delivery-cart").html("");
                         getCart();
                     }
 
-                    
+
                     $("#loader").addClass("hidden");
-                    $("html, body").animate({ scrollTop: "0" });
+                //    $("html, body").animate({ scrollTop: "0" });
 
                 });
             }
@@ -282,13 +285,16 @@ var $ = jQuery;
 
         //elimina dal carrello
         $(document).on("click", ".delivery-remove-from-cart", function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
             var rowId;
             if($(this).attr('delivery-attributeId') !== ''){
                 rowId = $(this).attr("delivery-attributeId")
             } else {
                 rowId = $(this).attr("delivery-productId")
             }
-            event.stopImmediatePropagation();
+            //event.stopImmediatePropagation();
             $.post(delivery.ajax, {
                 beforeSend: function () { // Before we send the request, remove the .hidden class from the spinner and default to inline-block.
                     $("#loader").removeClass("hidden");
@@ -299,6 +305,7 @@ var $ = jQuery;
                 action: "remove_from_cart"
             }, function (res) {
                 console.log(Cookies.get("delivery-session"));
+                console.log("REMOVE");
                 console.dir(res);
               /*  Cookies.set("delivery-session", res, {
                     expires: 36000 // il numero di giorni in cui il cookie sarà efficace
@@ -311,7 +318,8 @@ var $ = jQuery;
                 $("#loader").addClass("hidden");
                 // console.log("addClass delivery-remove-to-cart");
             }).fail(function (response){
-                console.log("errore get carrt"+response);
+                console.log("errore get carrt");
+                console.dir(response);
             });
         });
         if ($("#delivery-cart").length === 1) {
@@ -349,8 +357,9 @@ var $ = jQuery;
 
 $(function() {
 
-        getCartCount(); //aggiunge il numero di elementi nel carrello al menù "regala un'esperienza"
-        isLogged(); //controlla se il cliente è loggato
+    getCartCount(); //aggiunge il numero di elementi nel carrello al menù "regala un'esperienza"
+    isLogged(); //controlla se il cliente è loggato
+    //forceWPMLredirect();
 
 });
 
@@ -422,8 +431,8 @@ function getCart() {
         deliverySession: Cookies.get("delivery-session"),
         action: "getCart"
     }, function (res) {
-        
-        obj = JSON.parse(res);
+            obj = [];
+        if (res != '') obj = JSON.parse(res);
         var subtotal = 0;
         var rowTotal = 0;
         var rowProduct = '';
@@ -441,42 +450,43 @@ function getCart() {
             $("#delivery-cart").append(html);
         }
 
-        $.each(obj, function (i, val) {
-            console.dir(val);
-            var attributeValue = '';
-            var attributeId = '';
-            var attributeTheId ='';
-            if ($("#row-" + val.id).length === 0) {
-                rowTotal = val.quantity * val.price;
-                rowProduct = val.name;
-                if (val.attributes.attributeId !== undefined) {
-                    attributeValue = val.attributes.label;
-                    attributeId = val.attributes.attributeId;
-                    attributeTheId = val.attributes.attributeTheId;
-                    rowProduct += " + " + attributeValue;
+        if (obj){
+            $.each(obj, function (i, val) {
+                console.dir(val);
+                var attributeValue = '';
+                var attributeId = '';
+                var attributeTheId ='';
+                if ($("#row-" + val.id).length === 0) {
+                    rowTotal = val.quantity * val.price;
+                    rowProduct = val.name;
+                    if (val.attributes.attributeId !== undefined) {
+                        attributeValue = val.attributes.label;
+                        attributeId = val.attributes.attributeId;
+                        attributeTheId = val.attributes.attributeTheId;
+                        rowProduct += " + " + attributeValue;
+                    }
+                    html =
+                        "<div class='row' id='row-" + val.id + "'>" +
+                        "<div class='col-6'>" +
+                        "<a href=''>" + rowProduct + "</a>" +
+                        "<a href='#' class='no-barba delivery-cart-button delivery-remove-from-cart' delivery-productId='" + val.attributes.productId + "' delivery-attributeId='"+attributeId+"' ><span class='icon-qpc-delivery-06'></span></a>" +
+                        "</div>" +
+                        "<div class='col-3'>" +
+                    //    val.quantity +
+
+                        "<a href='#' class='no-barba delivery-cart-button delivery-add-to-cart' delivery-attributeValue='"+attributeValue+"' delivery-attributeId='"+attributeId+"' delivery-attributeTheId='"+attributeTheId+"' delivery-price='" + val.price + "' delivery-productId='" + val.attributes.productId + "' delivery-qty='-1' >-</a>" +
+                        "<input type='text' class='delivery-add-to-cart' delivery-price='" + val.price + "' delivery-productId='" + val.attributes.productId + "'  delivery-qty='" + val.quantity + "' value='" + val.quantity + "' delivery-attributeValue='"+attributeValue+"' delivery-attributeId='"+attributeId+"' delivery-attributeTheId='"+attributeTheId+"' />" +
+                        "<a href='#' class='no-barba delivery-cart-button delivery-add-to-cart' delivery-attributeValue='"+attributeValue+"' delivery-attributeId='"+attributeId+"' delivery-attributeTheId='"+attributeTheId+"' delivery-price='" + val.price + "' delivery-productId='" + val.attributes.productId + "' delivery-qty='1' >+</a>" +
+                        "</div>" +
+
+                        "<div class='col-3 alignRight boldFont'>" + currencyFormat(rowTotal) + "</div>" +
+                        "</div>";
+                    $("#delivery-cart").append(html);
+
+                    subtotal += (rowTotal);
                 }
-                html =
-                    "<div class='row' id='row-" + val.id + "'>" +
-                    "<div class='col-6'>" +
-                    "<a href=''>" + rowProduct + "</a>" +
-                    "<a href='#' class='no-barba delivery-cart-button delivery-remove-from-cart' delivery-productId='" + val.attributes.productId + "' delivery-attributeId='"+attributeId+"' ><span class='icon-qpc-delivery-06'></span></a>" +
-                    "</div>" +
-                    "<div class='col-3'>" +
-                //    val.quantity +
-
-                    "<a href='#' class='no-barba delivery-cart-button delivery-add-to-cart' delivery-attributeValue='"+attributeValue+"' delivery-attributeId='"+attributeId+"' delivery-attributeTheId='"+attributeTheId+"' delivery-price='" + val.price + "' delivery-productId='" + val.attributes.productId + "' delivery-qty='-1' >-</a>" +
-                    "<input type='text' class='delivery-add-to-cart' delivery-price='" + val.price + "' delivery-productId='" + val.attributes.productId + "'  delivery-qty='" + val.quantity + "' value='" + val.quantity + "' delivery-attributeValue='"+attributeValue+"' delivery-attributeId='"+attributeId+"' delivery-attributeTheId='"+attributeTheId+"' />" +
-                    "<a href='#' class='no-barba delivery-cart-button delivery-add-to-cart' delivery-attributeValue='"+attributeValue+"' delivery-attributeId='"+attributeId+"' delivery-attributeTheId='"+attributeTheId+"' delivery-price='" + val.price + "' delivery-productId='" + val.attributes.productId + "' delivery-qty='1' >+</a>" +
-                    "</div>" +
-
-                    "<div class='col-3 alignRight boldFont'>" + currencyFormat(rowTotal) + "</div>" +
-                    "</div>";
-                $("#delivery-cart").append(html);
-
-                subtotal += (rowTotal);
-            }
-        });
-
+            });
+        }
         if ($("#row-total").length === 0) {
             html = "<div class='row' id='row-total'>" +
                 "<div class='col-3'></div>" +
@@ -496,7 +506,13 @@ function getCartCount() {
         deliverySession: Cookies.get("delivery-session"),
         action: "getCart"
     }, function (res) {
-        $("#delivery-cart-count").html(countCartItems(res));
+        console.dir(res);
+        tot = countCartItems(res);
+        $("#delivery-cart-count").html(tot);
+        if (tot == 0)
+            $(".btn-add-to-cart").hide();
+        else
+            $(".btn-add-to-cart").show();
     }).fail(function (response){
         console.log("errore get cart");
     });
@@ -505,11 +521,27 @@ function getCartCount() {
 
 function countCartItems(res) {
 
-    obj = JSON.parse(res);
     total = 0;
-    $.each(obj, function (i, val) {
-        total += parseInt(val.quantity);
-    });
+    if (res){
+        obj = JSON.parse(res);
 
+        $.each(obj, function (i, val) {
+            total += parseInt(val.quantity);
+        });
+    }
     return total;
+}
+
+function forceWPMLredirect(){
+    $.post(delivery.ajax,{
+        action: "forceRightPermalinkInWPMLSwitcher",
+        url: window.location.href
+    }, function (res){
+        console.dir(res);
+        obj = JSON.parse(res);
+
+        $.each(obj, function (i, val) {
+            $("."+i+ " a").attr("href",val);
+        });
+    })
 }
