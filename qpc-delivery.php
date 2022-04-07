@@ -10,7 +10,6 @@ Author URI: https://quartopianocomunicazione.it
 
 include("api/DeliveryAPI.php");
 include("api/MailchimpAPI.php");
-include("mapTranslations.class.php");
 
 /**
  * Currently plugin version.
@@ -18,8 +17,9 @@ include("mapTranslations.class.php");
 define('QPC_DELIVERY_VERSION', '1.0.0');
 
 define('QPC_DELIVERY_BASEURL', 'https://ristorantescudiero.finedelivery.it/storage/app/public/');
-define('QPC_DELIVERY_URL', 'https://ristorantescudiero.finedelivery.it/');
+define('QPC_DELIVERY_URL', 'https://ristorantescudiero.finedelivery.it');
 //define('QPC_DELIVERY_BASEURL', 'https://qpc.qpcdev.it/storage/app/public/');
+//define('QPC_DELIVERY_URL', 'https://qpc.qpcdev.it/');
 //
 class Qpc_Delivery
 {
@@ -62,7 +62,6 @@ class Qpc_Delivery
 
 	public $cart;
 
-	private static $mapTranslations;
 
 	public function __construct()
 	{
@@ -86,9 +85,9 @@ class Qpc_Delivery
 
 			self::$_delivery   = new DeliveryAPI();
 
-			if (self::instanceOfMapTranslation()){ /* it's an Ajax call */
-				self::$mapTranslations = new mapTranslations();
-			}
+	//if (self::instanceOfMapTranslation()){ /* it's an Ajax call */
+			//	self::$mapTranslations = new mapTranslations();
+		//	}
 
 			add_action('init', array($plugin, 'product_api_rewrite_tag'));
 			add_action('init', array($plugin, 'category_api_rewrite_tag'));
@@ -153,29 +152,7 @@ class Qpc_Delivery
 	}
 
 
-	// Siccome esistono più versioni di finedelivery (chiamate con ID // chiamate con slug // slug stringa // slug json)
-	// Creiamo una sorta di fallback per mantenere compatibilità e cercare di minimizzare comunque il numero di chiamate all'API
-	private static function instanceOfMapTranslation(){
-		if (defined('DOING_AJAX') && DOING_AJAX) //MAI NEL CONTESTO AJAX!
-			return false;
-
-		//testo il funzionamento dell'API - se funziona con id o slug - con la prima categoria
-		$categories = self::$_delivery->getCategories();
-		foreach ($categories as $category)
-			if ($category['featured']){
-				$cat_test = self::$_delivery->getCategory($category['id']);
-				break;
-			}
-		if ($cat_test){ //se funziona con l'ID, il mapping è necessario
-			self::$fd_version = 'id';
-			return true;
-		}else{ //se funziona con lo slug, il mapping è necessario SOLO se non sono in italiano
-			self::$fd_version = 'slug';
-			if (self::$lang == 'it')
-				return false;
-		}
-
-	}
+	
 	/**
 	 * Get all Delivery products
 	 *
@@ -202,7 +179,9 @@ class Qpc_Delivery
 		$cat_slug = urlencode($cat_slug);
 		foreach ($products['products'] as $product) {
 			foreach ($product['categories'] as $category) {
-				if (($category['slug'] == $cat_slug || self::getTranslatedValue($category, 'slug') == $cat_slug) && $product['status']) {
+				$category_slug = json_decode($category['slug'], true);
+
+				if (( /*$category['slug'] == $cat_slug || */ self::getTranslatedValue($category, 'slug') == $cat_slug) && $product['status']) {
 					$return[] = $product;
 				}
 			}
@@ -221,14 +200,9 @@ class Qpc_Delivery
 	 */
 	public static function getProduct($product_slug)
 	{
-		$product_slug = urldecode($product_slug);
-		if (self::$fd_version==='id'){
-			$product_slug_ = self::$mapTranslations->getProductSlugTranslation(ICL_LANGUAGE_CODE, $product_slug);
-			$returnProduct = (self::$_delivery->getProduct($product_slug_)['product']);
-			if ($returnProduct!==null)	return $returnProduct;
-		}
-
-		return self::$_delivery->getProduct($product_slug)['product'];
+	//	var_dump(self::$_delivery->getProduct(self::$lang, rawurlencode($product_slug)));
+	
+		return self::$_delivery->getProduct(self::$lang, rawurlencode($product_slug))['product'];
 
 		//
 	}
@@ -247,11 +221,16 @@ class Qpc_Delivery
 		//escludo Root e Degustazioni
 		foreach ($categories as $category) {
 			if ($category['parent_id'] == 1 && $category['menu'] && $category['featured'] == true) {
+				$category_slug = json_decode($category['slug'], true);
 				if ($addDegustazioni) {
-				//	if ($category['slug'] != 'degustazioni' && $category['slug'] != 'business-lunch') {
-					if ($category['slug'] != 'degustazioni') {
+					if ( $category_slug['it'] !== 'degustazioni' ){
+
 						$return[] = $category;
 					}
+				//	if ($category['slug'] != 'degustazioni' && $category['slug'] != 'business-lunch') {
+				/*	if ($category['slug'] != 'degustazioni') {
+						$return[] = $category;
+					}*/	
 				} else {
 					$return[] = $category;
 				}
@@ -269,12 +248,12 @@ class Qpc_Delivery
 
 	public static function getCategory($cat_slug)
 	{
-		if (self::$fd_version == 'id'){
+	/*	if (self::$fd_version == 'id'){
 			$cat_slug_ = (self::$mapTranslations->getCategorySlugTranslation(ICL_LANGUAGE_CODE, $cat_slug));
 			$returnCategory = (self::$_delivery->getCategory($cat_slug_));
 			if ($returnCategory) return $returnCategory;
-		}
-		return self::$_delivery->getCategory($cat_slug);
+		}*/
+		return self::$_delivery->getCategory(self::$lang, $cat_slug);
 }
 
 	public static function getVouchers()
@@ -398,7 +377,7 @@ class Qpc_Delivery
 	{
 		global $wpdb;
 		//	echo json_encode( $this->_delivery->getProductById( $_POST['productId'] ) );
-		echo json_encode(self::$_delivery->getProduct($_POST['productId']));
+		echo json_encode(self::$_delivery->getProduct($_POST['productId'], self::$fd_version));
 		wp_die();
 	}
 
@@ -448,10 +427,11 @@ class Qpc_Delivery
 	public static function getAttributeValuesHTML($attributes, $sep = ' | ')
 	{
 		$return = [];
-		foreach ($attributes as $attribute) :
-			$return[] = self::getAttributeTitle($attribute) . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
-		//	$return[] = $attribute['title'] . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
-		endforeach;
+		if (count($attributes)>0)
+			foreach ($attributes as $attribute) :
+				$return[] = self::getAttributeTitle($attribute) . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
+			//	$return[] = $attribute['title'] . " " . $attribute['quantity'] . " " . $attribute['value'] . " <strong>" . number_format($attribute["price"], 0, ",", "") . " € </strong>";
+			endforeach;
 
 		return implode($sep, $return);
 	}
@@ -639,7 +619,7 @@ class Qpc_Delivery
 		$urls[1] = ["url" => $menu_url, "name" => get_the_title($menu_page_id)];
 		// categoria
 		if ($category) {
-			if ($category!==null)
+			if ($category!==null && $category['category']['featured'])
 				$urls[2]  = ["url" => self::getURL($category), "name" => self::getCategoryName($category['category'])];
 		}
 		if ($product) {
@@ -666,7 +646,7 @@ class Qpc_Delivery
 		if (count($data['images']) > 0) {
 			return QPC_DELIVERY_URL . $data["images"][0]["resize_1"];
 		}
-		var_dump(self::getTranslatedValue($data, 'slug'));
+	//	var_dump(self::getTranslatedValue($data, 'slug'));
 		$products = self::getCategoryProducts( self::getTranslatedValue($data, 'slug') );
 		if (count($products) > 0) {
 			$gallery = self::prepareCategoryGalleryData( $products, $data );
@@ -682,7 +662,6 @@ class Qpc_Delivery
 
 	private static function getTranslatedValue($variable, $field)
 	{
-		self::detectLanguage();
 		$jsonDecode = json_decode($variable[$field], true);
 		if ($jsonDecode !== null)
 			return ($jsonDecode[self::$lang]);
@@ -734,7 +713,7 @@ class Qpc_Delivery
 			$page_template_menu = self::get_pages_by_template_filename();
 			$url_page_menu = apply_filters('wpml_permalink', get_permalink($page_template_menu), ICL_LANGUAGE_CODE );
 			if ($page_template_menu && strpos($_POST['url'], $url_page_menu)!==false){
-				if (self::$mapTranslations === null) self::$mapTranslations = new mapTranslations();
+		//		if (self::$mapTranslations === null) self::$mapTranslations = new mapTranslations();
 				//tolgo l'url della pagina menu dal $_post['url'] per estrarre gli slug della categoria e del prodotto
 				$slugs = explode("/", str_replace($url_page_menu, "", $_POST['url']));
 				$languages = apply_filters('wpml_active_languages', NULL, 'orderby=id&order=desc');
@@ -745,7 +724,7 @@ class Qpc_Delivery
 							$translatedPageID = apply_filters('wpml_object_id',  $page_template_menu->ID, 'page', FALSE, $l['code']);
 							$translatedUrl = apply_filters('wpml_permalink', get_permalink($translatedPageID) , $l['code'] );
 
-							$return['wpml-ls-item-'.$l['code']] = $translatedUrl . self::$mapTranslations->getCategoryTranslationFromTo(ICL_LANGUAGE_CODE, $l['code'], $slugs[0]) .'/'. self::$mapTranslations->getProductTranslationFromTo(ICL_LANGUAGE_CODE, $l['code'], $slugs[1]);
+						//	$return['wpml-ls-item-'.$l['code']] = $translatedUrl . self::$mapTranslations->getCategoryTranslationFromTo(ICL_LANGUAGE_CODE, $l['code'], $slugs[0]) .'/'. self::$mapTranslations->getProductTranslationFromTo(ICL_LANGUAGE_CODE, $l['code'], $slugs[1]);
 						}
 					}
 				}

@@ -3,7 +3,7 @@
 
 class DeliveryAPI {
 	const API_BASEURL = "https://ristorantescudiero.finedelivery.it/api/";
- 	//const API_BASEURL = "https://qpc.qpcdev.it/api/";
+ //const API_BASEURL = "https://qpc.qpcdev.it/api/";
 
 	private $deliverySession;
 
@@ -37,10 +37,10 @@ class DeliveryAPI {
 	 *
 	 * @return mixed|string
 	 */
-	public function getCategory( $slug ) {
+	public function getCategory( $lang, $slug ) {
 		$curl = curl_init();
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . "category/$slug",
+			CURLOPT_URL            => self::API_BASEURL . "category/api/$lang/$slug",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -85,10 +85,11 @@ class DeliveryAPI {
 	 *
 	 * @return mixed|string
 	 */
-	public function getProduct( $slug ) {
+	public function getProduct( $lang, $slug ) {
 		$curl = curl_init();
+		$apiURL = self::API_BASEURL . "product/api/$lang/$slug";
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . "product/$slug",
+			CURLOPT_URL            => $apiURL,
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -347,15 +348,17 @@ class DeliveryAPI {
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
 			CURLOPT_TIMEOUT        => 0,
+			CURLOPT_SSL_VERIFYPEER => 0,
 			CURLOPT_HEADER         => 1,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
 			CURLOPT_CUSTOMREQUEST  => "POST",
 			CURLOPT_HTTPHEADER     => array(
-				"Content-Type: application/x-www-form-urlencoded",
+				"Content-Type: application/json",
 				"Cookie: delivery_session=$deliverySession"
 			)
 		);
+
 		curl_setopt_array( $curl, $data );
 		$response = curl_exec( $curl );
 		$err      = curl_error( $curl );
