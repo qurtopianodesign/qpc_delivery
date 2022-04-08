@@ -8,18 +8,14 @@ Author: Quartopianocomunicazione
 Author URI: https://quartopianocomunicazione.it
 */
 
+include_once("config.php");
 include("api/DeliveryAPI.php");
 include("api/MailchimpAPI.php");
-
 /**
  * Currently plugin version.
  */
 define('QPC_DELIVERY_VERSION', '1.0.0');
 
-define('QPC_DELIVERY_BASEURL', 'https://ristorantescudiero.finedelivery.it/storage/app/public/');
-define('QPC_DELIVERY_URL', 'https://ristorantescudiero.finedelivery.it');
-//define('QPC_DELIVERY_BASEURL', 'https://qpc.qpcdev.it/storage/app/public/');
-//define('QPC_DELIVERY_URL', 'https://qpc.qpcdev.it/');
 //
 class Qpc_Delivery
 {

@@ -2,8 +2,6 @@
 
 
 class DeliveryAPI {
-	const API_BASEURL = "https://ristorantescudiero.finedelivery.it/api/";
- //const API_BASEURL = "https://qpc.qpcdev.it/api/";
 
 	private $deliverySession;
 
@@ -11,7 +9,7 @@ class DeliveryAPI {
 	public function getProducts() {
 		$curl = curl_init();
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . 'products',
+			CURLOPT_URL            => API_BASEURL . 'products',
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -40,7 +38,7 @@ class DeliveryAPI {
 	public function getCategory( $lang, $slug ) {
 		$curl = curl_init();
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . "category/api/$lang/$slug",
+			CURLOPT_URL            => API_BASEURL . "category/api/$lang/$slug",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -61,7 +59,7 @@ class DeliveryAPI {
 	public function getCategories() {
 		$curl = curl_init();
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . 'categories?colum=order&sort=asc',
+			CURLOPT_URL            => API_BASEURL . 'categories?colum=order&sort=asc',
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -87,7 +85,7 @@ class DeliveryAPI {
 	 */
 	public function getProduct( $lang, $slug ) {
 		$curl = curl_init();
-		$apiURL = self::API_BASEURL . "product/api/$lang/$slug";
+		$apiURL = API_BASEURL . "product/api/$lang/$slug";
 		curl_setopt_array( $curl, array(
 			CURLOPT_URL            => $apiURL,
 			CURLOPT_RETURNTRANSFER => true,
@@ -110,7 +108,7 @@ class DeliveryAPI {
 	public function getProductById( $id ) {
 		$curl = curl_init();
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . "product/$id/item",
+			CURLOPT_URL            => API_BASEURL . "product/$id/item",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -131,7 +129,7 @@ class DeliveryAPI {
 	public function getProductsCategory( $id ) {
 		$curl = curl_init();
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . "productscategories/id=$id",
+			CURLOPT_URL            => API_BASEURL . "productscategories/id=$id",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -166,7 +164,7 @@ class DeliveryAPI {
 		];
 
 		$data = array(
-			CURLOPT_URL            => self::API_BASEURL . 'register',
+			CURLOPT_URL            => API_BASEURL . 'register',
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -194,7 +192,7 @@ class DeliveryAPI {
 			'password' => $password
 		];
 		$data     = array(
-			CURLOPT_URL            => self::API_BASEURL . "login",
+			CURLOPT_URL            => API_BASEURL . "login",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -217,7 +215,7 @@ class DeliveryAPI {
 			'email' => $email
 		];
 		$data     = array(
-			CURLOPT_URL            => self::API_BASEURL . "password/email",
+			CURLOPT_URL            => API_BASEURL . "password/email",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -248,7 +246,7 @@ class DeliveryAPI {
 			'token'                 => $token
 		];
 		$data     = array(
-			CURLOPT_URL            => self::API_BASEURL . "password/reset",
+			CURLOPT_URL            => API_BASEURL . "password/reset",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -273,7 +271,7 @@ class DeliveryAPI {
 	public function user( $api_token ) {
 		$curl = curl_init();
 		curl_setopt_array( $curl, array(
-			CURLOPT_URL            => self::API_BASEURL . "user?api_token=$api_token",
+			CURLOPT_URL            => API_BASEURL . "user?api_token=$api_token",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -307,7 +305,7 @@ class DeliveryAPI {
 		}
 
 		$data = array(
-			CURLOPT_URL            => self::API_BASEURL . 'product/add/cart',
+			CURLOPT_URL            => API_BASEURL . 'product/add/cart',
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -343,7 +341,7 @@ class DeliveryAPI {
 
 		$curl = curl_init();
 		$data = array(
-      		CURLOPT_URL            => self::API_BASEURL . 'cart/item/'.$productId.'/remove',
+      		CURLOPT_URL            => API_BASEURL . 'cart/item/'.$productId.'/remove',
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -404,7 +402,7 @@ class DeliveryAPI {
 			'voucher_email' => $voucher_email
 		];
 		$data     = array(
-			CURLOPT_URL            => self::API_BASEURL . "checkout/order",
+			CURLOPT_URL            => API_BASEURL . "checkout/order",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
@@ -426,7 +424,7 @@ class DeliveryAPI {
 
 		$redirectURL = curl_getinfo( $curl, CURLINFO_EFFECTIVE_URL );
 		curl_close( $curl );
-		if ( $redirectURL == self::API_BASEURL . "checkout/order" ) {
+		if ( $redirectURL == API_BASEURL . "checkout/order" ) {
 			$return['response'] = $response;
 		} else {
 			$return['redirect'] = $redirectURL;
@@ -445,7 +443,7 @@ class DeliveryAPI {
 		if ( $deliverySession != '' ) {
 			$curl = curl_init();
 			curl_setopt_array( $curl, array(
-				CURLOPT_URL            => self::API_BASEURL . 'cart',
+				CURLOPT_URL            => API_BASEURL . 'cart',
 				CURLOPT_RETURNTRANSFER => true,
 				CURLOPT_ENCODING       => "",
 				CURLOPT_MAXREDIRS      => 10,
@@ -472,7 +470,7 @@ class DeliveryAPI {
 		if ( $order_id != '' ) {
 			$curl = curl_init();
 			curl_setopt_array( $curl, array(
-				CURLOPT_URL            => self::API_BASEURL . 'order/' . $order_id,
+				CURLOPT_URL            => API_BASEURL . 'order/' . $order_id,
 				CURLOPT_RETURNTRANSFER => true,
 				CURLOPT_ENCODING       => "",
 				CURLOPT_MAXREDIRS      => 10,
