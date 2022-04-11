@@ -493,27 +493,48 @@ class Qpc_Delivery
 	 */
 	public static function finedelivery_api_rewrite_rules( $wp_rewrite ) {
 
+		if (defined('ICL_LANGUAGE_CODE')){
+			$fd_rules = [];
+			if ($page_template_menu = self::get_pages_by_template_filename()) {
 
-		if ($page_template_menu = self::get_pages_by_template_filename()) {
+				$languages = apply_filters('wpml_active_languages', NULL, 'orderby=id&order=desc');
 
-			$languages = apply_filters('wpml_active_languages', NULL, 'orderby=id&order=desc');
-
-			if (!empty($languages)) {
-				foreach ($languages as $l) {
-					if ($l['active']) {
-						$translatedPageID =  apply_filters('wpml_object_id',  $page_template_menu->ID, 'page', FALSE, $l['language_code']);
-						$translatedPage = get_post($translatedPageID);
-						$lang_prefix = (($l['code'] == ICL_LANGUAGE_CODE) ? '' : $l['code'].'/' );
-						$fd_rules = array(
-							 $lang_prefix.$translatedPage->post_name . '/(.+)/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]&product_slug=$matches[2]',
-							 $lang_prefix.$translatedPage->post_name . '/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]'
-						);
+				if (!empty($languages)) {
+					foreach ($languages as $l) {
+						if ($l['active']) {
+							$translatedPageID =  apply_filters('wpml_object_id',  $page_template_menu->ID, 'page', FALSE, $l['language_code']);
+							$translatedPage = get_post($translatedPageID);
+							$lang_prefix = (($l['code'] == ICL_LANGUAGE_CODE) ? '' : $l['code'].'/' );
+							$fd_rules = array(
+								$lang_prefix.$translatedPage->post_name . '/(.+)/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]&product_slug=$matches[2]',
+								$lang_prefix.$translatedPage->post_name . '/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]'
+							);
+						}
 					}
 				}
+				$wp_rewrite->rules = $fd_rules + $wp_rewrite->rules;
 			}
-		}
 
-		$wp_rewrite->rules = $fd_rules + $wp_rewrite->rules;
+
+		}else{
+			/**
+			 * Add tag for Delivery products
+			 */
+			add_rewrite_tag( '%product_slug%', '([^&]+)' );
+			/**
+			 * Add tag for Delivery products
+			 */
+			add_rewrite_tag( '%category_slug%', '([^&]+)' );
+			/**
+			 * Add rewrite rule for Delivery product page
+			 */
+			add_rewrite_rule( '^menu/([^/]*)/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]&product_slug=$matches[2]', 'top' );
+			/**
+			 * Add rewrite rule for Delivery category page
+			 */
+			add_rewrite_rule( '^menu/([^/]*)/?', 'index.php??page_id=2697&category_slug=$matches[1]', 'top' );
+		
+		}
 	}
 	public static function finedelivery_api_rewrite_filter( $query_vars ){
 		$query_vars[] = 'category_slug';

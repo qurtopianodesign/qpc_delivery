@@ -460,10 +460,10 @@ function getCart() {
                     rowTotal = val.quantity * val.price;
                     rowProduct = val.name;
                     if (val.attributes.attributeId !== undefined) {
-                        attributeValue = val.attributes.label;
+                        rowProduct += " + " + val.attributes.label.replace(/\\'/g, "'").replace(/\\/g, "");
+                        attributeValue = val.attributes.label.replace(/'/g, "&#39;");
                         attributeId = val.attributes.attributeId;
                         attributeTheId = val.attributes.attributeTheId;
-                        rowProduct += " + " + attributeValue;
                     }
                     html =
                         "<div class='row' id='row-" + val.id + "'>" +

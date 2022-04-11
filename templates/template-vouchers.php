@@ -58,7 +58,7 @@ global $wp_query;
 									delivery-attributeId="<?= $attribute["id"]; ?>"
 									delivery-attributeTheId="<?= $attribute["attribute_id"]; ?>"
 									delivery-attributePrice="<?= $attribute["price"]; ?>"
-									delivery-attributeValue="<?= QPC_Delivery::getAttributeTitle($attribute); ?>"
+									delivery-attributeValue="<?= QPC_Delivery::getAttributeTitle(str_replace("'", "&#39;", $attribute)); ?>"
 									delivery-qty="1"><?php esc_html_e( "Aggiungi al carrello", 'mos-theme' ); ?>
 					</button>
 							</div>
