@@ -146,9 +146,8 @@ var $ = jQuery;
                         // console.log("removeHidden delivery-register");
                     }
                 }, function (res) {
-                    if (res === "0") {
-                        $("#delivery-register-error").html(delivery.error_status);
-                    } else {
+                    var obj = JSON.parse(res);
+                    if (obj.status) {
                         if ($("#voucher-api-token").length === 1) {
                             $("#voucher-first_name").val($("#first_name").val());
                             $("#voucher-last_name").val($("#last_name").val());
@@ -169,6 +168,11 @@ var $ = jQuery;
                             $("#delivery-logout").show();
                             $("#delivery-user-ok").html(delivery.register_ok_status);
                         }
+                    } else {
+                        $.each(obj.response, function (i, val) {
+                            htmlResponse = val+"<br/>";
+                        });
+                        $("#delivery-register-error").html(htmlResponse);
                     }
                     $("#loader").addClass("hidden");
                     // console.log("addHidden delivery-register");

@@ -295,18 +295,14 @@ class Qpc_Delivery
 		global $wpdb;
 		$register_response = self::$_delivery->register($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['email'], $_POST['password'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number']);
 
-		if ($register_response) {
+		if ($register_response['status']) {
 
 			$login_response = self::$_delivery->login($_POST['deliverySession'], $_POST['email'], $_POST['password']);
 			$this->_mailchimp->addSubscriber($_POST['first_name'], $_POST['last_name'], $_POST['email']);
-			echo $login_response['api_token'];
+			$register_response['response'] = $login_response['api_token'];
 
-		} else {
-
-			echo 0;
-
-		}
-
+		} 
+		echo json_encode($register_response);
 		wp_die();
 	}
 
@@ -394,7 +390,6 @@ class Qpc_Delivery
 		global $wpdb;
 
 		$this->detectLanguage();
-		error_log(json_encode($_POST, true));
 		self::$_delivery->addToCart($_POST['deliverySession'], $_POST['price'], $_POST['productId'], $_POST['calice'], $_POST['attributePrice'], $_POST['attributeId'], $_POST['attributeId'], self::$lang, $_POST['qty']);
 		echo self::$_delivery->getDeliverySession();
 		wp_die();

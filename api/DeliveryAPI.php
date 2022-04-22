@@ -176,13 +176,14 @@ class DeliveryAPI {
 			CURLOPT_POSTFIELDS     => http_build_query( $postdata, '', '&' )
 		);
 		curl_setopt_array( $curl, $data );
+		
+		$response = curl_exec( $curl );
+		
+		curl_close( $curl );
 
-		$response = $this->executeGETcurl( $curl );
-		if ( $response === "utente creato" ) {
-			return true;
+		if (!curl_errno($curl)) {
+			return ['status' => (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 200 ), 'response' => json_decode( $response, true )];
 		}
-
-		return false;
 	}
 
 	public function login( $deliverySession, $email, $password ) {
