@@ -173,16 +173,22 @@ class DeliveryAPI {
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
 			CURLOPT_CUSTOMREQUEST  => "POST",
+			 CURLOPT_HEADER => true,
 			CURLOPT_POSTFIELDS     => http_build_query( $postdata, '', '&' )
 		);
 		curl_setopt_array( $curl, $data );
 		
 		$response = curl_exec( $curl );
 		
+		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+		$header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+		$body = substr($response, $header_size);
+		//var_dump($httpcode);
 		curl_close( $curl );
 
 		if (!curl_errno($curl)) {
-			return ['status' => (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 200 ), 'response' => json_decode( $response, true )];
+			return ['status' => ($httpcode == 200 ), 'response' => json_decode( $body, true )];
 		}
 	}
 

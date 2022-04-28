@@ -146,6 +146,7 @@ var $ = jQuery;
                         // console.log("removeHidden delivery-register");
                     }
                 }, function (res) {
+                    console.dir(res);
                     var obj = JSON.parse(res);
                     if (obj.status) {
                         if ($("#voucher-api-token").length === 1) {
