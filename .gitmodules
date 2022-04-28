@@ -1,0 +1,3 @@
+[submodule "qpc_delivery"]
+	path = qpc_delivery
+	url = https://github.com/qurtopianodesign/qpc_delivery.git
