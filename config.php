@@ -1,6 +1,6 @@
 <?php
 
-define('QPC_DELIVERY_URL', 'https://ristorantescudiero.localhost:8887');
+define('QPC_DELIVERY_URL', 'https://ristorantescudiero.finedelivery.it');
 define('API_BASEURL', QPC_DELIVERY_URL.'/api/');
 define('QPC_DELIVERY_BASEURL', QPC_DELIVERY_URL.'/storage/app/public/');
 //define('QPC_DELIVERY_BASEURL', 'https://qpc.qpcdev.it/storage/app/public/');

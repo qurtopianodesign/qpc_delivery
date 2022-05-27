@@ -158,9 +158,9 @@ var $ = jQuery;
                             $("#voucher-country").val($("#country").val());
                             $("#voucher-post_code").val($("#post_code").val());
                             $("#voucher-phone_number").val($("#phone_number").val());
-                            $("#voucher-api-token").val(res);
+                            $("#voucher-api-token").val(obj.response);
 
-                            Cookies.set("delivery-token", res, {
+                            Cookies.set("delivery-token", obj.response, {
                                 expires: 36000 // il numero di giorni in cui il cookie sarà efficace
                             });
                             $("#delivery-register-error").html("");
