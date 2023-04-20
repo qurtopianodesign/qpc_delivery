@@ -345,7 +345,7 @@ var $ = jQuery;
                 $("#delivery-order-" + obj.status).show();
                 $.each(obj, function (i, val) {
                     if ($("#delivery-order-" + i + "-value").length === 1) {
-                        $("#delivery-order-" + i + "-value").html(val);
+                        $("#delivery-order-" + i + "-value").html(i == 'grand_total' ? Number(val).toFixed(2) : val);
                     }
                 });
 
