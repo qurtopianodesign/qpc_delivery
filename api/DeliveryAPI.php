@@ -246,7 +246,7 @@ class DeliveryAPI {
 			'token'                 => $token
 		];
 		$data     = array(
-			CURLOPT_URL            => API_BASEURL . "password/reset",
+			CURLOPT_URL            => API_BASEURL . "passwordreset",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING       => "",
 			CURLOPT_MAXREDIRS      => 10,
