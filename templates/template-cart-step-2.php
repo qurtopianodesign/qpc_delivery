@@ -28,7 +28,7 @@ require('template-parts/header/no-header.php');
                     <div id="delivery-login-error"></div>
                     <div class="wrap-input-contact-group">
                         <span class="wpcf7-form-control-wrap">
-                            <label for=""><?php esc_html_e("E-mail", "mos-theme"); ?> *</label>
+                            <label for=""><?php esc_html_e("E-mail", "mos-theme"); ?> *</label> 
                             <input class="input-border" type="email" name="email" id="email-login" required />
                         </span>
                     </div>
