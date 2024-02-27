@@ -117,6 +117,8 @@ class Qpc_Delivery
 			add_action('wp_ajax_nopriv_remove_from_cart', array($plugin, 'remove_from_cart'));
 			add_action('wp_ajax_getCart', array($plugin, 'getCart'));
 			add_action('wp_ajax_nopriv_getCart', array($plugin, 'getCart'));
+			add_action('wp_ajax_get_stripe_key', array($plugin, 'get_stripe_key'));
+			add_action('wp_ajax_nopriv_get_stripe_key', array($plugin, 'get_stripe_key'));
 			add_action('wp_ajax_forceRightPermalinkInWPMLSwitcher', array($plugin, 'forceRightPermalinkInWPMLSwitcher'));
 			add_action('wp_ajax_nopriv_forceRightPermalinkInWPMLSwitcher', array($plugin, 'forceRightPermalinkInWPMLSwitcher'));
 			add_action('wp_enqueue_scripts', array($plugin, 'ja_global_enqueues'));
@@ -142,7 +144,8 @@ class Qpc_Delivery
 				'paypal_status' => __("Stai per essere reindirizzato sul sito di PayPal...", 'mos-theme'),
 				'register_ok_status' => __("Grazie per esserti registrato!", 'mos-theme'),
 				'login_ok_status' => __("Accesso effettuato correttamente", 'mos-theme'),
-				'recover_ok_status' => __("Controlla la tua e-mail e clicca sul pulsante per reimpostare la password.", 'mos-theme')
+				'recover_ok_status' => __("Controlla la tua e-mail e clicca sul pulsante per reimpostare la password.", 'mos-theme'),
+				'stripe_key' => ''
 			)
 		);
 	}
@@ -359,12 +362,48 @@ class Qpc_Delivery
 	public function checkout()
 	{
 		global $wpdb;
-		$checkout_response = self::$_delivery->checkout($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'], $_POST['notes'], $_POST['api_token'], $_POST['voucher_name'], $_POST['voucher_email']);
+		switch ($_POST['method']){
+			case 'stripe':
+				$checkout_response = self::$_delivery->checkout_stripe($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'], $_POST['notes'], $_POST['api_token'], $_POST['voucher_name'], $_POST['voucher_email']);
+			break;
+			default :
+				$checkout_response = self::$_delivery->checkout($_POST['deliverySession'], $_POST['first_name'], $_POST['last_name'], $_POST['address'], $_POST['city'], $_POST['country'], $_POST['post_code'], $_POST['phone_number'], $_POST['notes'], $_POST['api_token'], $_POST['voucher_name'], $_POST['voucher_email']);
+			break;
+		}
 		echo json_encode($checkout_response);
 
 		wp_die();
 	}
 
+	/**
+	 * Get Stripe API Key (AJAX)
+	 * 
+	 */
+	public function get_stripe_key(){
+		global $wpdb;
+
+		$response = self::$_delivery->get_stripe_key();
+		echo json_encode($response);
+
+		wp_die();
+
+	}	
+	
+	/**
+	* Get Stripe API Key (non AJAX)
+	* 
+	*/
+   public static function hasStripe(){
+
+		$response = self::$_delivery->get_stripe_key();
+
+	   	if (array_key_exists('response',$response)){
+			return $response['response'];
+	  	}
+		
+	  	return false;
+	  
+   }
 	/**
 	 * Get Delivery Product (AJAX)
 	 *

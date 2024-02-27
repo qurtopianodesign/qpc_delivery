@@ -423,8 +423,96 @@ class DeliveryAPI {
 		$response = curl_exec( $curl );
 
 		$redirectURL = curl_getinfo( $curl, CURLINFO_EFFECTIVE_URL );
+		error_log($redirectURL);
 		curl_close( $curl );
 		if ( $redirectURL == API_BASEURL . "checkout/order" ) {
+			$return['response'] = $response;
+		} else {
+			$return['redirect'] = $redirectURL;
+		}
+
+		return $return;
+		//return $this->executeGETcurl( $curl );
+	}
+
+	public function get_stripe_key(){
+			$curl = curl_init();
+			curl_setopt_array( $curl, array(
+				CURLOPT_URL            => API_BASEURL . 'stripeKey',
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_ENCODING       => "",
+				CURLOPT_MAXREDIRS      => 10,
+				CURLOPT_TIMEOUT        => 30,
+				CURLOPT_SSL_VERIFYPEER => 0,
+				CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+				CURLOPT_CUSTOMREQUEST  => "GET",
+				CURLOPT_HTTPHEADER     => array(
+					//	"Authorization: Bearer {$this->token}",
+					"Content-Type: application/json"
+				),
+			) );
+
+			return $this->executeGETcurl( $curl );
+	}
+	
+	/**
+	 * @param $deliverySession
+	 * @param $first_name
+	 * @param $last_name
+	 * @param $address
+	 * @param $city
+	 * @param $country
+	 * @param $post_code
+	 * @param $phone_number
+	 * @param $notes
+	 * @param string $api_token
+	 *
+	 * @param $voucher_name
+	 * @param $voucher_email
+	 *
+	 * @return array|bool|string
+	 */
+	public function checkout_stripe( $deliverySession, $first_name, $last_name, $address, $city, $country, $post_code, $phone_number, $notes, $api_token, $voucher_name, $voucher_email /*$id*/ ) {
+		$curl     = curl_init();
+		$postdata = [
+		//	'id'            => $id,
+			'first_name'    => $first_name,
+			'last_name'     => $last_name,
+			'address'       => $address,
+			'city'          => $city,
+			'country'       => $country,
+			'post_code'     => $post_code,
+			'phone_number'  => $phone_number,
+			'notes'         => $notes,
+			'api_token'     => $api_token,
+			'voucher_name'  => $voucher_name,
+			'voucher_email' => $voucher_email
+		];
+		$data     = array(
+			CURLOPT_URL            => API_BASEURL . "checkoutStripe/order",
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING       => "",
+			CURLOPT_MAXREDIRS      => 10,
+			CURLOPT_TIMEOUT        => 0,
+			CURLOPT_HEADER         => 0,
+			CURLOPT_SSL_VERIFYPEER => 0,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+			CURLOPT_POSTFIELDS     => http_build_query( $postdata, '', '&' ),
+			CURLOPT_CUSTOMREQUEST  => "POST",
+			CURLOPT_HTTPHEADER     => array(
+				"Content-Type: application/x-www-form-urlencoded",
+				"Cookie: delivery_session=$deliverySession"
+			)
+		);
+		curl_setopt_array( $curl, $data );
+
+		$response = curl_exec( $curl );
+
+		$redirectURL = curl_getinfo( $curl, CURLINFO_EFFECTIVE_URL );
+		error_log($redirectURL);
+		curl_close( $curl );
+		if ( $redirectURL == API_BASEURL . "checkoutStripe/order" ) {
 			$return['response'] = $response;
 		} else {
 			$return['redirect'] = $redirectURL;
