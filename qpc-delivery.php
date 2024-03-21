@@ -201,7 +201,15 @@ class Qpc_Delivery
 	{
 	//	var_dump(self::$_delivery->getProduct(self::$lang, rawurlencode($product_slug)));
 	
-		return self::$_delivery->getProduct(self::$lang, rawurlencode($product_slug))['product'];
+		//return self::$_delivery->getProduct(self::$lang, rawurlencode($product_slug))['product'];
+
+		$product_data = self::$_delivery->getProduct(self::$lang, rawurlencode($product_slug));
+    
+		if ($product_data !== null && isset($product_data['product'])) {
+			return $product_data['product'];
+		} else {
+			return null;
+		}
 
 		//
 	}
@@ -396,12 +404,10 @@ class Qpc_Delivery
    public static function hasStripe(){
 
 		$response = self::$_delivery->get_stripe_key();
-
 	   	if (array_key_exists('response',$response)){
 			return $response['response'];
 	  	}
-		
-	  	return false;
+		  	return false;
 	  
    }
 	/**
@@ -532,7 +538,7 @@ class Qpc_Delivery
 	 */
 	public static function finedelivery_api_rewrite_rules( $wp_rewrite ) {
 
-		if (defined('ICL_LANGUAGE_CODE')){
+		if (is_plugin_active('sitepress-multilingual-cms/sitepress.php')){
 			$fd_rules = [];
 			if ($page_template_menu = self::get_pages_by_template_filename()) {
 
@@ -543,7 +549,7 @@ class Qpc_Delivery
 						if ($l['active']) {
 							$translatedPageID =  apply_filters('wpml_object_id',  $page_template_menu->ID, 'page', FALSE, $l['language_code']);
 							$translatedPage = get_post($translatedPageID);
-							$lang_prefix = (($l['code'] == ICL_LANGUAGE_CODE) ? '' : $l['code'].'/' );
+							$lang_prefix = (($l['code'] == self::$lang) ? '' : $l['code'].'/' );
 							$fd_rules = array(
 								$lang_prefix.$translatedPage->post_name . '/(.+)/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]&product_slug=$matches[2]',
 								$lang_prefix.$translatedPage->post_name . '/(.+)/?' => 'index.php??pagename=' . $translatedPage->post_name . '&category_slug=$matches[1]'
@@ -667,8 +673,8 @@ class Qpc_Delivery
 
 		//pagina menù
 		$menu_page_id = $wp_query->queried_object_id;
-		if (defined('ICL_LANGUAGE_CODE')){
-			$menu_url = apply_filters('wpml_permalink', get_permalink($menu_page_id), ICL_LANGUAGE_CODE );
+		if (is_plugin_active('sitepress-multilingual-cms/sitepress.php')){
+			$menu_url = apply_filters('wpml_permalink', get_permalink($menu_page_id), self::$lang );
 		}else{
 			$menu_url = get_permalink();
 		}
@@ -727,8 +733,8 @@ class Qpc_Delivery
 
 	private static function detectLanguage()
 	{
-		if (defined('ICL_LANGUAGE_CODE')) {
-			self::$lang = ICL_LANGUAGE_CODE;
+		if (is_plugin_active('sitepress-multilingual-cms/sitepress.php')) {
+			self::$lang = apply_filters( 'wpml_current_language', NULL );
 		} else {
 			self::$lang = 'it';
 		}
@@ -763,11 +769,12 @@ class Qpc_Delivery
 
 		global $sitepress;
 
-		$return['wpml-ls-item-'.ICL_LANGUAGE_CODE] = $_POST['url'];
-		if (defined('ICL_LANGUAGE_CODE')){
+		self::detectLanguage();
+		$return['wpml-ls-item-'.self::$lang] = $_POST['url'];
+		if (is_plugin_active('sitepress-multilingual-cms/sitepress.php')){
 			//se la pagina è template-menu.php
 			$page_template_menu = self::get_pages_by_template_filename();
-			$url_page_menu = apply_filters('wpml_permalink', get_permalink($page_template_menu), ICL_LANGUAGE_CODE );
+			$url_page_menu = apply_filters('wpml_permalink', get_permalink($page_template_menu), self::$lang );
 			if ($page_template_menu && strpos($_POST['url'], $url_page_menu)!==false){
 		//		if (self::$mapTranslations === null) self::$mapTranslations = new mapTranslations();
 				//tolgo l'url della pagina menu dal $_post['url'] per estrarre gli slug della categoria e del prodotto
@@ -776,7 +783,7 @@ class Qpc_Delivery
 				//
 				if (!empty($languages)) {
 					foreach ($languages as $l) {
-						if ( $l['code'] !== ICL_LANGUAGE_CODE ){
+						if ( $l['code'] !== self::$lang ){
 							$translatedPageID = apply_filters('wpml_object_id',  $page_template_menu->ID, 'page', FALSE, $l['code']);
 							$translatedUrl = apply_filters('wpml_permalink', get_permalink($translatedPageID) , $l['code'] );
 

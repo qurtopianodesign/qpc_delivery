@@ -290,6 +290,12 @@ $(document).on("click change paste", ".delivery-add-to-cart", function (event) {
   if ($(this).attr("delivery-attributeTheId")) {
     attributeTheId = $(this).attr("delivery-attributeTheId");
   }
+
+  if ($("#delivery_lang")) {
+    lang = $("#delivery_lang").val();
+  }else{
+    lang = 'it';
+  }
   if (qty !== 0) {
     $.post(
       delivery.ajax,
@@ -302,6 +308,7 @@ $(document).on("click change paste", ".delivery-add-to-cart", function (event) {
         attributeId: attributeId,
         attributeTheId: attributeTheId,
         deliverySession: Cookies.get("delivery-session"),
+        lang: lang,
         action: "add_to_cart",
         beforeSend: function () {
           // Before we send the request, remove the .hidden class from the spinner and default to inline-block.
